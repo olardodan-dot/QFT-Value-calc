@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QuantiFERON Value Calculator</title>
+<style>
+:root{font:16px system-ui,sans-serif;color:#183247;background:#eef4f6;--blue:#103d57;--green:#08766b;--line:#dbe6eb}
+[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0}header{background:var(--blue);color:white;padding:35px max(5vw,20px)}h1{font-size:clamp(1.7rem,4vw,2.6rem);margin:.15em 0}p{line-height:1.55}header p{margin:0;color:#d9e9f1}
+main{max-width:1190px;margin:auto;padding:24px;display:grid;grid-template-columns: minmax(300px, 360px) minmax(0,1fr);gap:22px;align-items:start}
+section,details{background:white;border:1px solid var(--line);border-radius:13px;padding:18px;margin-bottom:14px}
+h2,h3{margin:0 0 14px}h2{font-size:1.2rem}h3{font-size:1rem}label{display:block;font-size:.86rem;font-weight:650}input,select{width:100%;margin:5px 0 12px;padding:9px 10px;min-height:40px;border:1px solid #a9bec9;border-radius:7px;background:white;color:inherit;font:inherit}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 11px}.check input{width:auto;min-height:auto;margin-right:8px;vertical-align:middle}.check{margin-bottom:9px}summary{cursor:pointer;font-weight:700}details .grid{margin-top:16px}
+button{font:inherit;font-weight:700;border:1px solid var(--green);border-radius:7px;padding:9px 13px;background:var(--green);color:white;cursor:pointer}button.secondary{color:var(--green);background:white}button:disabled{opacity:.45;cursor:default}:focus-visible{outline:3px solid #cf791e;outline-offset:2px}
+.report-head{display:flex;justify-content:space-between;gap:12px;align-items:start}.report-head p{margin:0;color:#486678}.banner{background:#e5f5ef;border-radius:9px;padding:15px;margin:17px 0}.banner.loss{background:#fff0e6}.banner strong{display:block;font-size:1.85rem;margin-top:3px}.note{font-size:.85rem;color:#496477}.alert{background:#fff4da;padding:10px;border-radius:6px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.91rem}th,td{text-align:right;padding:9px 5px;border-bottom:1px solid var(--line)}th:first-child{text-align:left}tbody th{font-weight:500}tr.group th{background:#edf4f7;font-weight:700}tr.total{background:#e5f5ef;font-weight:700}tr.total th{font-weight:700}small{font-size:.8rem}
+@media(max-width:770px){main{grid-template-columns:1fr;padding:14px;gap:10px}}@media print{body,header{background:white;color:black}header{padding:0 0 12px}header p{color:black}main{display:block;padding:0}.inputs,button{display:none}section,details{border:0;padding:0}tr{break-inside:avoid}table{font-size:10pt}th,td{padding:4px}}
+.views{max-width:1190px;margin:0 auto;padding:16px 24px 0;display:flex;gap:8px;flex-wrap:wrap}
+.views button[aria-pressed="false"]{background:white;color:var(--green)}
+main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{min-width:620px}
+@media print{.views{display:none}}
+</style>
+</head>
+<body>
+<header><h1>QuantiFERON Value Calculator</h1><p>Annual comparison of QuantiFERON‑TB Gold Plus and tuberculin skin testing</p></header>
+<nav class="views" aria-label="Calculator views">
+<button type="button" id="calculatorView" aria-pressed="true" aria-controls="calculatorPanel">Calculator</button>
+<button type="button" id="findingsView" aria-pressed="false" aria-controls="findingsPanel">Sensitivity Analysis on Multicenter Cost</button>
+<button type="button" id="hires1500" aria-pressed="false" aria-controls="findingsPanel">1,500 new hires</button>
+<button type="button" id="hires2000" aria-pressed="false" aria-controls="findingsPanel">2,000 new hires</button>
+</nav>
+<main id="calculatorPanel">
+<form class="inputs" id="scenario">
+<section><h2>Facility and workflow</h2>
+<div class="grid">
+<label>State<select id="state"></select></label>
+<label>Facility<select id="facility"><option>Hospital</option><option>Clinic</option></select></label>
+<label>QFT processing<select id="process"><option>Send out</option><option>In-house</option></select></label>
+<label>QFT sample draw<select id="draw"><option>PSC/Lab</option><option>In-house</option></select></label>
+</div></section>
+<section><h2>People screened per year</h2>
+<label>Patients<input id="patients" type="number" min="0" max="100000000" step="1" value="0" required></label>
+<label>Current employees<input id="employees" type="number" min="0" max="100000000" step="1" value="0" required></label>
+<label>New hires<input id="hires" type="number" min="0" max="100000000" step="1" value="0" required></label>
+<label id="cashLabel" hidden>Cash-pay patients<input id="cash" type="number" min="0" max="100000000" step="1" value="0" required></label>
+<label class="check"><input type="checkbox" id="two">Two-step TST for new hires</label>
+</section>
+<details open><summary>Cost and reimbursement assumptions</summary>
+<div class="grid">
+<label>QFT price source<select id="priceSource"><option value="contract">Contract</option><option value="noncontract">Non-contract</option><option value="public">Public Health</option><option value="government">Government</option></select></label>
+<label id="yearLabel" hidden>Pricing year<select id="year"></select></label>
+<label id="manualLabel">Contract price / test ($)<input id="qPrice" type="number" min="0" step="0.01" required></label>
+<label>TST price / test ($)<input id="tPrice" type="number" min="0" step="0.01" value="10" required></label>
+<label>TST non-return (%)<input id="nonreturn" type="number" min="0" max="100" step="any" value="25" required></label>
+<label id="feeLabel" hidden>Cash charge ($)<input id="fee" type="number" min="0" step="0.01" value="12" required></label>
+<label>QFT test reimbursement ($)<input id="qRate" type="number" min="0" step="0.01" value="61.98" required></label>
+<label>QFT draw reimbursement ($)<input id="drawRate" type="number" min="0" step="0.01" value="5" required></label>
+<label>TST reimbursement ($)<input id="tRate" type="number" min="0" step="0.01" value="10.82" required></label>
+<label>X-ray cost ($)<input id="xPrice" type="number" min="0" step="0.01" value="200" required></label>
+</div>
+<label>Positive-result rates<select id="positiveRateSource"><option value="state">State defaults</option><option value="excel">Excel formulas</option></select></label>
+<label class="check"><input type="checkbox" id="xray" checked>Include in-house X-rays</label>
+<label class="check"><input type="checkbox" id="legacy">Use Excel X-ray and reimbursement rules</label>
+</details>
+<button class="secondary" type="reset">Reset scenario</button>
+</form>
+<article>
+<section aria-labelledby="reportTitle">
+<div class="report-head"><div><h2 id="reportTitle">Annual comparison</h2><p id="context"></p></div><button id="print" type="button">Print / PDF</button></div>
+<div id="result" aria-live="polite"></div>
+</section>
+<details open><summary>Model notes</summary>
+<p class="note">This draft uses the six state profiles and the labor lookup values saved in the source workbook. Screening outcomes are modeled estimates. TB treatment costs are excluded. Confirm pricing, reimbursement and labor assumptions before sharing an estimate.</p>
+<p class="note">By default, the X-ray setting applies to both cost and profit calculations. QFT reimbursement is based on the applicable patient claim type, with cash collected separately. Excel rules mode restores the workbook’s X-ray behavior and its single-rate reimbursement formula for comparison.</p>
+<p class="note">Contract uses the price you enter. Non-contract uses the Average QFT Pricing column in ContractPricingTable, based on annual QFT test volume. Public Health and Government use the Average pricing row from their respective workbook tables for the selected year.</p>
+<p class="note">State defaults apply when you select a state. State defaults apply specified positive-result rates to the number of people screened and use the Excel formulas where a rate is unspecified. Excel formulas mode uses modeled positive results for both tests. Rhode Island uses its saved population inputs with the same formulas. Rhode Island timing uses the supplied visit and follow-up values.</p>
+<p class="note">Source workbook: QFT-TST-Value Calculator-Multi-Center.xlsm. This version covers the workbook’s Clinic and Hospital TST workflows. Excel parity with populated scenarios is pending.</p>
+</details>
+</article>
+</main>
+<main id="findingsPanel" class="findings" hidden>
+<section aria-labelledby="findingsTitle">
+<div class="report-head"><div><h2 id="findingsTitle">Sensitivity Analysis on Multicenter Cost</h2><p id="findingsVolume"></p></div><button type="button" id="printFindings">Print / PDF</button></div>
+<p>Each state uses in-house QFT processing and blood draw, two-step TST, $29.43 per QFT test and $12.50 per TST in the base case. State X-ray costs and TST non-compliance stay fixed across runs.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Annual costs and savings by state"><table>
+<thead><tr><th rowspan="2" scope="col">State</th><th colspan="3" scope="colgroup">State positive-rate defaults</th><th colspan="3" scope="colgroup">Excel positive-rate formulas</th><th rowspan="2" scope="col">Change in savings</th></tr>
+<tr><th scope="col">QFT cost</th><th scope="col">TST cost</th><th scope="col">Savings</th><th scope="col">QFT cost</th><th scope="col">TST cost</th><th scope="col">Savings</th></tr></thead>
+<tbody id="findingsRows"></tbody></table></div>
+<p id="findingsSummary"></p>
+<p class="note">Savings equal annual TST cost minus annual QFT cost. Change in savings equals the state-default result minus the Excel-formula result. Dollar figures are rounded after calculation. Rhode Island uses its saved population and labor inputs.</p>
+</section>
+<section aria-labelledby="breakEvenTitle">
+<h2 id="breakEvenTitle">Break-even QFT price per test</h2>
+<p>At these prices, QFT and TST have the same modeled annual cost. Bold values fall below the $29.43 QFT base price.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Break-even QFT prices">
+<table><thead><tr><th rowspan="2">State</th><th colspan="3" scope="colgroup">State defaults</th><th colspan="3" scope="colgroup">Excel formulas</th></tr><tr><th>TST $10</th><th>TST $12.50</th><th>TST $15</th><th>TST $10</th><th>TST $12.50</th><th>TST $15</th></tr></thead><tbody id="breakEvenRows"></tbody></table>
+</div></section>
+<section aria-labelledby="positivityTitle">
+<h2 id="positivityTitle">Impact of the positivity assumptions</h2>
+<p>Each pair shows state defaults / Excel formulas. A positive dollar contribution means QFT saves on that cost line.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Positive results and savings drivers">
+<table><thead><tr><th>State</th><th>QFT positives</th><th>TST positives</th><th>Hours saved</th><th>Product savings</th><th>Labor savings</th><th>X-ray savings</th><th>QFT savings at base price</th></tr></thead><tbody id="positivityRows"></tbody></table>
+</div></section>
+<section aria-labelledby="priceTitle">
+<h2 id="priceTitle">Price sensitivity</h2>
+<p>Annual QFT savings at each price combination, summed across six equally sized hospital scenarios. Uses state positive-rate defaults. The base case is shaded.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Savings by QFT and TST prices">
+<table><thead><tr><th scope="col">QFT price per test</th><th scope="col">TST $10.00</th><th scope="col">TST $12.50</th><th scope="col">TST $15.00</th></tr></thead><tbody id="priceRows"></tbody></table>
+</div><p id="priceSummary"></p>
+</section>
+<section aria-labelledby="timeTitle">
+<h2 id="timeTitle">Staff time sensitivity</h2>
+<p>Annual hours saved under each positivity setting. The adverse case assumes QFT takes 20% longer and TST takes 20% less time. The favorable case reverses those changes. Negative hours mean QFT takes more time.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Workforce hours saved by state">
+<table><thead><tr><th scope="col">State</th><th scope="col">Positivity setting</th><th scope="col">QFT base hours</th><th scope="col">TST base hours</th><th scope="col">Adverse hours saved</th><th scope="col">Base hours saved</th><th scope="col">Favorable hours saved</th></tr></thead><tbody id="timeRows"></tbody></table>
+</div><p class="note">The time scenarios report hours. The calculator uses separate labor-cost lookup values for dollar estimates.</p>
+</section>
+</main>
+<script>
+const profiles = {"California": {"base": 5.495865136542655e-05, "employee": 3.856724612490329e-05, "foreign": 0.25227919548323413, "minutes": [15, 23], "positiveMinutes": [55, 28], "q": {"10": 5.938367538544638, "11": 5.938367538544638, "12": 176.72092855114755, "13": 220.90116068893445}, "t": {"15": 17.03, "16": 17.03, "17": 34.06, "18": 15.333633904418397, "19": 19.167042380522997, "20": 19.167042380522997, "21": 38.33408476104599, "22": 19.167042380522997, "23": 1.9123835287045388, "24": 2.3904794108806735, "25": 70.9744648365104, "26": 83.68727250941919}, "xray": 100, "nonreturn": 10, "tPositiveRate": 0.1}, "Minnesota": {"base": 2.5711958894448736e-05, "employee": 1.701663556234371e-05, "foreign": 0.07754534400152242, "minutes": [10, 15], "positiveMinutes": [30.37, 55], "q": {"10": 3.390221402214022, "11": 3.390221402214022, "12": 105.64965521668292, "13": 132.06206902085364}, "t": {"15": 20.15, "16": 20.15, "17": 40.29, "18": 12.584911331529907, "19": 15.731139164412385, "20": 15.731139164412385, "21": 31.46227832882477, "22": 15.731139164412385, "23": 1.8688007213706044, "24": 2.3360009017132555, "25": 59.9860745333107, "26": 70.81620828536396}, "xray": 0, "qPositiveRate": 0.02}, "Oregon": {"base": 1.815979059167192e-05, "employee": 9.403684655946879e-06, "foreign": 0.08440953676732615, "minutes": [11, 15], "positiveMinutes": [28.45, 55], "q": {"10": 9.376615569582206, "11": 9.376615569582206, "12": 86.8425248747528, "13": 108.553156093441}, "t": {"15": 20.55, "16": 20.55, "17": 41.11, "18": 14.408626390141269, "19": 18.010782987676585, "20": 18.010782987676585, "21": 36.02156597535317, "22": 18.010782987676585, "23": 1.8556507363991583, "24": 2.319563420498948, "25": 63.98208080592979, "26": 75.2429489184432}, "xray": 103, "qPositiveRate": 0.015}, "Pennsylvania": {"base": 1.611161510230336e-05, "employee": 8.686516558821423e-06, "foreign": 0.06148916960273229, "minutes": [15, 15], "positiveMinutes": [33.8, 55], "q": {"10": 8.158626390141269, "11": 8.158626390141269, "12": 149.00582647620888, "13": 186.2572830952611}, "t": {"15": 16.69, "16": 16.69, "17": 33.38, "18": 11.999549143372409, "19": 14.99943642921551, "20": 14.99943642921551, "21": 29.99887285843102, "22": 14.99943642921551, "23": 1.581379621280433, "24": 1.9767245266005413, "25": 55.62884919539007, "26": 65.58852993427365}, "xray": 100, "qPositiveRate": 0.01}, "Tennessee": {"base": 2.1414372504286066e-05, "employee": 9.049065590901358e-06, "foreign": 0.048860365385921735, "minutes": [8, 15], "positiveMinutes": [31.5, 55], "q": {"10": 4.703336339044184, "11": 4.703336339044184, "12": 53.08051118157711, "13": 66.35063897697138}, "t": {"15": 11.13, "16": 11.13, "17": 22.26, "18": 10.498948001202285, "19": 13.123685001502857, "20": 13.123685001502857, "21": 26.247370003005713, "22": 13.123685001502857, "23": 1.460024045686805, "24": 1.8250300571085063, "25": 42.91747576853586, "26": 50.18342045458326}, "xray": 150, "qPositiveRate": 0.01}, "Rhode Island": {"base": 1.8879662827202538e-05, "employee": 0, "foreign": 0.1175960255612654, "q": {"10": 6.313433447905264, "11": 6.313433447905264, "12": 114.25988926007385, "13": 142.8248615750923}, "t": {"15": 17.11, "16": 17.11, "17": 34.22, "18": 12.965133754132854, "19": 16.206417192666066, "20": 16.206417192666066, "21": 32.41283438533213, "22": 16.206417192666066, "23": 1.7356477306883078, "24": 2.169559663360385, "25": 58.69778902793537, "26": 69.10367602041666}, "xray": 200, "nonreturn": 20, "tPositiveRate": 0.05, "minutes": [12, 15], "positiveMinutes": [60, 28]}};
+const priceTiers = [[0, 31.572499999999998], [1501, 30.865000000000002], [4001, 30.1552], [8001, 29.43905], [11501, 28.727899999999998], [15001, 28.01675], [20001, 27.2625]];
+const annualPrices = {
+  "public": {
+    "2024": 25.6175,
+    "2025": 25.98,
+    "2026": 25.98,
+    "2027": 26.2325,
+    "2028": 26.4875,
+    "2029": 27.07
+  },
+  "government": {
+    "2024": 28.2275,
+    "2025": 28.622500000000002,
+    "2026": 28.8925,
+    "2027": 29.17,
+    "2028": 29.17,
+    "2029": 29.752499999999998
+  }
+};
+
+function calculate(input) {
+  const profile = profiles[input.state];
+  const useStateRates = input.positiveRateSource !== 'excel';
+  const clinic = input.facility === 'Clinic';
+  const inHouse = input.process === 'In-house';
+  const cash = clinic ? input.cash : 0;
+  const populations = [input.patients,input.employees,input.hires,cash];
+  const people = populations.reduce((total,n) => total+n,0);
+  const second = input.two ? input.hires : 0;
+  const results = populations.map((n,index) => {
+    const infectionRate = index === 1 ? profile.employee : profile.base;
+    const estimatedInfections = n*infectionRate;
+    const qTruePositive = estimatedInfections*0.9409;
+    const qFalsePositive = n*(index === 2 ? 1 : 1-infectionRate)*(1-0.9727);
+    const qNegative = n*(1-infectionRate)*0.9727+estimatedInfections*(1-0.9409);
+    const repeat = n*0.009;
+    const foreignBorn = n*profile.foreign;
+    const adjustedPopulation = index === 2 ? 1 : 1-infectionRate;
+    const modeledTPositive = estimatedInfections*0.89+adjustedPopulation*((n-foreignBorn)*0.05+foreignBorn*0.226);
+    const tPositive = !useStateRates || profile.tPositiveRate == null ? modeledTPositive : n*profile.tPositiveRate;
+    const qPositive = !useStateRates || profile.qPositiveRate == null ? qTruePositive+qFalsePositive : n*profile.qPositiveRate;
+    const tNegative = estimatedInfections+adjustedPopulation*n-tPositive;
+    return {
+      qPositive, qNegative:qNegative+qTruePositive+qFalsePositive-qPositive, repeat,
+      qCount:qTruePositive+qFalsePositive+qNegative+repeat, tPositive,tNegative
+    };
+  });
+  const sum = key => results.reduce((total,row) => total+row[key],0);
+  const qPositive = Math.round(sum('qPositive'));
+  const tPositive = Math.round(sum('tPositive'));
+  const repeats = sum('repeat');
+  const nonreturns = people*input.nonreturn/100;
+  const qTests = people+repeats;
+  const tTests = people+nonreturns+second;
+  const qVolumes = results.map(row => Math.round(row.qCount));
+  const qVolume = qVolumes.reduce((total,n) => total+n,0);
+  const qPaid = qVolume - (inHouse ? 0 : qVolumes[0]);
+  let qPrice = input.qPrice;
+  if (input.priceSource === 'noncontract') qPrice = priceTiers.filter(([minimum]) => qVolume >= minimum).at(-1)[1];
+  if (input.priceSource in annualPrices) qPrice = annualPrices[input.priceSource][input.year];
+
+  const qLabor = results.slice(0,3).reduce((total,row,i) =>
+    total+populations[i]*profile.q[clinic ? 11 : 10]+Math.round(row.qPositive)*profile.q[clinic ? 13 : 12],0);
+  const baseTstLabor = [clinic ? 22 : 18,clinic ? 19 : 15,clinic ? (input.two ? 21 : 20) : (input.two ? 17 : 16)];
+  const tLabor = results.slice(0,3).reduce((total,row,i) =>
+    total+populations[i]*(profile.t[baseTstLabor[i]]+input.nonreturn/100*profile.t[clinic ? 24 : 23])
+    +Math.round(row.tPositive)*profile.t[clinic ? 26 : 25],0);
+  // Calculations!J58:L62 uses facility-specific follow-up times.
+  const hospitalFollowUpMinutes = clinic ? 55 : 63;
+  const california = input.state === 'California';
+  const qFollowUpMinutes = california ? hospitalFollowUpMinutes : profile.positiveMinutes?.[0];
+  const tFollowUpMinutes = california || input.state === 'Rhode Island' ? profile.positiveMinutes?.[1] : hospitalFollowUpMinutes;
+  const qHours = profile.minutes ? (profile.minutes[0]*qTests+qFollowUpMinutes*qPositive)/60 : null;
+  const tHours = profile.minutes ? (profile.minutes[1]*(tTests-nonreturns)+tFollowUpMinutes*tPositive+5*nonreturns)/60 : null;
+
+  const patientClaims = results[0].qCount;
+  const labClaims = inHouse ? patientClaims : 0;
+  const drawClaims = !inHouse && input.draw === 'In-house' ? patientClaims : 0;
+  const qReimbursed = labClaims+drawClaims;
+  const tReimbursed = Math.round(results[0].tPositive+results[0].tNegative);
+  const qReimbursement = input.legacy
+    ? qReimbursed*((labClaims+cash > 0 && drawClaims === 0) ? input.qRate : (labClaims+cash === 0 && drawClaims > 0) ? input.drawRate : 0)
+    : labClaims*input.qRate+drawClaims*input.drawRate;
+  const tReimbursement = tReimbursed*input.tRate;
+
+  function financial(positive, labor, product, reimbursement) {
+    const xray = input.xray ? positive*input.xPrice : 0;
+    const cost = labor+product+xray;
+    const income = reimbursement+cash*input.fee;
+    const financialCost = input.legacy ? labor+product+positive*input.xPrice : cost;
+    return {labor,product,xray,cost,financialCost,reimbursement,income,net:income-financialCost};
+  }
+  const q = financial(qPositive,qLabor,qPaid*qPrice,qReimbursement);
+  const t = financial(tPositive,tLabor,tTests*input.tPrice,tReimbursement);
+  return {people,repeats,nonreturns,second,qTests,tTests,qPaid,qPrice,qHours,tHours,qPositive,tPositive,
+    qNegative:Math.round(sum('qNegative')),tNegative:Math.round(sum('tNegative')),qReimbursed,tReimbursed,q,t,gain:q.net-t.net};
+}
+
+const element = id => document.getElementById(id);
+const form = element('scenario');
+element('state').replaceChildren(...Object.keys(profiles).map(state => new Option(state,state)));
+element('year').replaceChildren(...Object.keys(annualPrices.public).map(year => new Option(year,year)));
+function defaults() {
+  element('state').value = 'Oregon';
+  element('year').value = '2026';
+  applyStateDefaults();
+}
+const count = new Intl.NumberFormat('en-US',{maximumFractionDigits:1});
+const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
+const unitPrice = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:5});
+const fmt = value => value === null ? 'Unavailable' : count.format(value);
+const usd = value => money.format(value);
+const row = (label,q,t,format=fmt,kind='') => '<tr class="'+kind+'"><th scope="row">'+label+'</th><td>'+format(q)+'</td><td>'+format(t)+'</td></tr>';
+const group = label => '<tr class="group"><th colspan="3">'+label+'</th></tr>';
+
+function render() {
+  const input = Object.fromEntries(Array.from(form.elements).filter(field => field.id).map(field => [
+    field.id,field.type === 'number' ? field.valueAsNumber : field.type === 'checkbox' ? field.checked : field.value
+  ]));
+  const clinic = input.facility === 'Clinic';
+  const manual = input.priceSource === 'contract';
+  element('cashLabel').hidden = element('feeLabel').hidden = !clinic;
+  element('yearLabel').hidden = !(input.priceSource in annualPrices);
+  element('manualLabel').hidden = !manual;
+  element('cash').disabled = element('fee').disabled = !clinic;
+  element('qPrice').disabled = !manual;
+  if (!clinic) input.fee = 0;
+  element('context').textContent = [input.state,input.facility,input.process,input.draw,input.positiveRateSource === 'excel' ? 'Excel positive-rate formulas' : 'State positive-rate defaults'].join(' · ');
+  const valid = form.checkValidity();
+  const data = valid ? calculate(input) : null;
+  element('print').disabled = !data?.people;
+  if (!data?.people) {
+    element('result').innerHTML = '<p class="banner">'+(valid ? 'Enter annual screening volume to see the comparison.' : manual && element('qPrice').validity.valueMissing ? 'Enter the QFT contract price per test to see the comparison.' : 'Enter valid nonnegative values in the visible fields.')+'</p>';
+    return;
+  }
+  const {q,t,people} = data;
+  const banner = '<div class="banner '+(data.gain<0?'loss':'')+'">Estimated annual financial impact of switching to QFT‑Plus<strong>'+usd(data.gain)+'</strong></div>';
+  const legacy = input.legacy ? '<p class="note alert">Excel rules mode is on. The P&amp;L cost can include X-rays even when the in-house X-ray setting is off. Reimbursement follows the workbook’s single-rate rule.</p>' : '';
+  element('result').innerHTML = banner+legacy+'<table><thead><tr><th scope="col">Annual estimate</th><th scope="col">QFT‑Plus</th><th scope="col">TST</th></tr></thead><tbody>'+
+    group('Screening and workload')+
+    row('People screened',people,people)+row('Positive results',data.qPositive,data.tPositive)+row('Negative results',data.qNegative,data.tNegative)+
+    row('Repeat tests',data.repeats,0)+row('Non-returns',0,data.nonreturns)+row('Second tests for new hires',0,data.second)+
+    row('Total tests',data.qTests,data.tTests)+row('Tests with product cost',data.qPaid,data.tTests)+row('Workforce hours',data.qHours,data.tHours)+
+    group('Costs and income')+
+    row('Price per test',data.qPrice,input.tPrice,value=>unitPrice.format(value))+
+    row('Product cost',q.product,t.product,usd)+row('Labor cost',q.labor,t.labor,usd)+row('X-ray cost',q.xray,t.xray,usd)+
+    row('Total cost',q.cost,t.cost,usd)+row('Cost per person',q.cost/people,t.cost/people,usd)+
+    row('Reimbursed tests or draws',data.qReimbursed,data.tReimbursed)+row('Reimbursement income',q.reimbursement,t.reimbursement,usd)+
+    row('Cash income',q.income-q.reimbursement,t.income-t.reimbursement,usd)+
+    row('Total income',q.income,t.income,usd)+row('Total cost used for P&L',q.financialCost,t.financialCost,usd)+
+    row('Profit / loss',q.net,t.net,usd,'total')+'</tbody></table>';
+}
+
+function applyStateDefaults() {
+  const profile = profiles[element('state').value];
+  element('xPrice').value = profile.xray;
+  element('nonreturn').value = profile.nonreturn ?? 25;
+}
+
+form.addEventListener('input',event => {
+  if (event.target === element('state')) applyStateDefaults();
+  render();
+});
+form.addEventListener('reset',() => setTimeout(() => { defaults(); render(); },0));
+element('print').addEventListener('click',() => window.print());
+element('printFindings').addEventListener('click',() => window.print());
+
+function renderFindings(hires) {
+  element('findingsVolume').textContent = fmt(hires)+' new hires per hospital per year';
+  const scenario = {
+    facility:'Hospital', process:'In-house', draw:'In-house',
+    patients:0, employees:0, hires, cash:0, two:true,
+    qPrice:29.43, tPrice:12.50, priceSource:'contract', fee:0,
+    qRate:61.98, drawRate:5, tRate:10.82, xray:true, legacy:false
+  };
+  const results = Object.entries(profiles).map(([state,profile]) => {
+    const input = {...scenario,state,xPrice:profile.xray,nonreturn:profile.nonreturn ?? 25};
+    const defaultsRun = calculate({...input,positiveRateSource:'state'});
+    const excelRun = calculate({...input,positiveRateSource:'excel'});
+    return {state,defaultsRun,excelRun,change:defaultsRun.gain-excelRun.gain};
+  });
+  element('findingsRows').innerHTML = results.map(({state,defaultsRun,excelRun,change}) =>
+    '<tr><th scope="row">'+state+'</th>'+
+    [defaultsRun.q.cost,defaultsRun.t.cost,defaultsRun.gain,excelRun.q.cost,excelRun.t.cost,excelRun.gain,change]
+      .map(value => '<td>'+usd(value)+'</td>').join('')+'</tr>'
+  ).join('');
+  const largest = results.reduce((a,b) => Math.abs(a.change) >= Math.abs(b.change) ? a : b);
+  element('findingsSummary').textContent = largest.state+' has the largest change in annual savings ('+
+    usd(Math.abs(largest.change))+' '+(largest.change < 0 ? 'lower' : 'higher')+' with the state defaults).';
+
+  const priceResults = [27.26,29.43,60].map(qPrice => ({
+    qPrice,
+    outcomes:[10,12.50,15].map(tPrice => {
+      const stateSavings = Object.entries(profiles).map(([state,profile]) =>
+        calculate({...scenario,state,qPrice,tPrice,xPrice:profile.xray,
+          nonreturn:profile.nonreturn ?? 25,positiveRateSource:'state'}).gain);
+      return {tPrice,total:stateSavings.reduce((sum,gain) => sum+gain,0),
+        positiveStates:stateSavings.filter(gain => gain > 0).length};
+    })
+  }));
+  element('priceRows').innerHTML = priceResults.map(({qPrice,outcomes}) =>
+    '<tr><th scope="row">'+usd(qPrice)+'</th>'+outcomes.map(({tPrice,total,positiveStates}) =>
+      '<td'+(qPrice === scenario.qPrice && tPrice === scenario.tPrice ? ' style="background:#e5f5ef;font-weight:700"' : '')+
+      '>'+usd(total)+'<br><small>'+positiveStates+' of '+results.length+' states save</small></td>'
+    ).join('')+'</tr>'
+  ).join('');
+  const totals = priceResults.flatMap(row => row.outcomes.map(outcome => outcome.total));
+  element('priceSummary').textContent = 'Across the nine price combinations, combined annual savings range from '+
+    usd(Math.min(...totals))+' to '+usd(Math.max(...totals))+'.';
+
+  element('breakEvenRows').innerHTML = results.map(({state,defaultsRun,excelRun}) => {
+    const ceilings = [defaultsRun,excelRun].flatMap(run => [10,12.50,15].map(tPrice =>
+      scenario.qPrice+(run.gain+(tPrice-scenario.tPrice)*run.tTests)/run.qPaid));
+    return '<tr><th scope="row">'+state+'</th>'+ceilings.map(value =>
+      '<td>'+(value < scenario.qPrice ? '<strong>'+usd(value)+'</strong>' : usd(value))+'</td>').join('')+'</tr>';
+  }).join('');
+
+  const hoursSaved = (run,qFactor=1,tFactor=1) => run.qHours === null || run.tHours === null
+    ? null : run.tHours*tFactor-run.qHours*qFactor;
+  element('positivityRows').innerHTML = results.map(({state,defaultsRun,excelRun}) => {
+    const runs = [defaultsRun,excelRun];
+    const pair = (value,format) => runs.map(run => format(value(run))).join(' / ');
+    const saves = runs.map(run => run.gain > 0);
+    const verdict = saves[0] === saves[1] ? (saves[0] ? 'Both settings' : 'Neither setting')
+      : (saves[0] ? 'State defaults only' : 'Excel formulas only');
+    const values = [pair(run=>run.qPositive,fmt),pair(run=>run.tPositive,fmt),pair(hoursSaved,fmt),
+      ...['product','labor','xray'].map(key=>pair(run=>run.t[key]-run.q[key],usd)),verdict];
+    return '<tr><th scope="row">'+state+'</th>'+values.map(value=>'<td>'+value+'</td>').join('')+'</tr>';
+  }).join('');
+
+  element('timeRows').innerHTML = results.flatMap(({state,defaultsRun,excelRun}) =>
+    [[defaultsRun,'State defaults'],[excelRun,'Excel formulas']].map(([run,label]) => {
+      const values = [run.qHours,run.tHours,hoursSaved(run,1.2,0.8),hoursSaved(run),hoursSaved(run,0.8,1.2)];
+      return '<tr><th scope="row">'+state+'</th><td>'+label+'</td>'+
+        values.map(value=>'<td>'+fmt(value)+'</td>').join('')+'</tr>';
+    })
+  ).join('');
+}
+
+const views = {calculatorView:0,findingsView:1000,hires1500:1500,hires2000:2000};
+function showFindings(view) {
+  const hires = views[view];
+  element('calculatorPanel').hidden = Boolean(hires);
+  element('findingsPanel').hidden = !hires;
+  for (const id of Object.keys(views)) element(id).setAttribute('aria-pressed',String(id === view));
+  if (hires) renderFindings(hires);
+}
+
+for (const id of Object.keys(views)) element(id).addEventListener('click',() => showFindings(id));
+defaults();
+render();
+</script>
+</body>
+</html>
