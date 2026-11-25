@@ -247,6 +247,7 @@ const form = element('scenario');
 element('state').replaceChildren(...Object.keys(profiles).map(state => new Option(state,state)));
 element('year').replaceChildren(...Object.keys(annualPrices.public).map(year => new Option(year,year)));
 function defaults() {
+  hadNewHires = element('hires').valueAsNumber > 0;
   element('state').value = 'Oregon';
   element('year').value = '2026';
   applyStateDefaults();
@@ -340,7 +341,13 @@ function applyStateDefaults() {
   element('nonreturn').value = profile.nonreturn ?? 25;
 }
 
+let hadNewHires = false;
 form.addEventListener('input',event => {
+  if (event.target === element('hires')) {
+    const hasNewHires = event.target.valueAsNumber > 0;
+    if (hasNewHires !== hadNewHires) element('two').checked = hasNewHires;
+    hadNewHires = hasNewHires;
+  }
   if (event.target === element('state')) applyStateDefaults();
   render();
 });
