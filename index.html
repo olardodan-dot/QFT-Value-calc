@@ -57,6 +57,11 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 .study-prices .note{flex-basis:100%;margin:0}
 #helpPanel{max-width:960px}#helpPanel h3{margin:16px 0 4px}#helpPanel p{margin:6px 0 12px}
 @media print{.study-prices{display:none}}
+.presentation-caption{margin:6px 0;color:#365567;font-weight:650;font-size:.9rem}
+.presentation-note{margin:6px 0 12px}
+.presentation-takeaway{margin:12px 0 0;padding:8px 10px;background:#eff8f3;border-left:3px solid #08766b;font-size:.9rem}
+.presentation-takeaway strong{margin-right:.35em}
+@media print{#findingsPanel h2,#findingsPanel h3,#findingsPanel .presentation-caption{break-after:avoid}.presentation-takeaway{break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -151,40 +156,50 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <button class="secondary" type="reset">Restore study prices</button>
 <p class="note" id="studyPriceError" role="status"></p>
 </form>
-<p id="studyAppliedPrices"></p>
-<p class="note"><strong>How to read this:</strong> Savings equal TST cost minus QFT cost. The last column shows how much more or less QFT saves under the survey inputs compared with Excel. Check both Savings columns to see which method costs less.</p>
+</section>
+<section aria-label="Annual screening costs and savings by state">
+<h3>Annual screening costs and savings by state</h3>
+<p class="presentation-caption" id="findingsCaption"></p>
+<p class="note presentation-note">Savings = TST cost minus QFT‑Plus cost. The last column compares Survey Input with Excel formulas.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Annual costs and savings by state"><table>
 <thead><tr><th rowspan="2" scope="col">State</th><th colspan="3" scope="colgroup">State Defaults (Survey Input)</th><th colspan="3" scope="colgroup">Excel positive-rate formulas</th><th rowspan="2" scope="col">Survey savings vs. Excel</th></tr>
 <tr><th scope="col">QFT cost</th><th scope="col">TST cost</th><th scope="col">Savings</th><th scope="col">QFT cost</th><th scope="col">TST cost</th><th scope="col">Savings</th></tr></thead>
 <tbody id="findingsRows"></tbody></table></div>
-<p id="findingsSummary"></p>
+<p class="presentation-takeaway"><strong>Takeaway</strong> <span id="findingsSummary"></span></p>
 <p class="note">Dollar figures are rounded after calculation.</p>
 </section>
 <section aria-labelledby="breakEvenTitle">
-<h2 id="breakEvenTitle">Break-even QFT price per test</h2>
-<p><strong>How to read this:</strong> Each cell shows the QFT price per test where annual costs are equal at the TST price in that column. Below it, QFT costs less. Above it, TST costs less. Bold values fall below the selected QFT price.</p>
+<h2 id="breakEvenTitle">Break-even QFT‑Plus price by state</h2>
+<p class="presentation-caption" id="breakEvenCaption"></p>
+<p class="note presentation-note">At the listed price, annual costs are equal. Bold values are below the selected QFT‑Plus price.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Break-even QFT prices">
 <table><thead><tr><th rowspan="2">State</th><th colspan="3" scope="colgroup">State defaults</th><th colspan="3" scope="colgroup">Excel formulas</th></tr><tr><th>TST $10</th><th>TST $12.50</th><th>TST $15</th><th>TST $10</th><th>TST $12.50</th><th>TST $15</th></tr></thead><tbody id="breakEvenRows"></tbody></table>
-</div></section>
+</div><p class="presentation-takeaway"><strong>Takeaway</strong> <span id="breakEvenSummary"></span></p>
+</section>
 <section aria-labelledby="positivityTitle">
-<h2 id="positivityTitle">Impact of the positivity assumptions</h2>
-<p><strong>How to read this:</strong> Each pair shows Survey Input / Excel Formulas. Positive dollar contributions show what QFT saves on each cost line. Where a survey rate is unavailable, both runs use the Excel formula for that test.</p>
+<h2 id="positivityTitle">Effect of positivity assumptions on costs and staff time</h2>
+<p class="presentation-caption" id="positivityCaption"></p>
+<p class="note presentation-note">Pairs show Survey Input / Excel formulas. Positive dollar amounts are savings with QFT‑Plus.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Positive results and savings drivers">
 <table><thead><tr><th>State</th><th>QFT positives</th><th>TST positives</th><th>Hours saved</th><th>Product savings</th><th>Labor savings</th><th>X-ray savings</th><th>QFT saves at selected prices</th></tr></thead><tbody id="positivityRows"></tbody></table>
-</div></section>
+</div><p class="presentation-takeaway"><strong>Takeaway</strong> <span id="positivitySummary"></span></p>
+</section>
 <section aria-labelledby="priceTitle">
-<h2 id="priceTitle">Price sensitivity</h2>
-<p><strong>How to read this:</strong> Pick a QFT price on the left and a TST price across the top. Each cell shows combined annual savings and how many of the six modeled hospitals save with QFT. The fixed grid uses Survey Input, and the original study base prices are shaded.</p>
+<h2 id="priceTitle">Annual savings at different test prices</h2>
+<p class="presentation-caption" id="priceCaption"></p>
+<p class="note presentation-note">Each cell shows combined savings and the number of hospitals that save. Shading marks the original base case.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Savings by QFT and TST prices">
 <table><thead><tr><th scope="col">QFT price per test</th><th scope="col">TST $10.00</th><th scope="col">TST $12.50</th><th scope="col">TST $15.00</th></tr></thead><tbody id="priceRows"></tbody></table>
-</div><p id="priceSummary"></p>
+</div><p class="presentation-takeaway"><strong>Takeaway</strong> <span id="priceSummary"></span></p>
 </section>
 <section aria-labelledby="timeTitle">
-<h2 id="timeTitle">Staff time sensitivity</h2>
-<p><strong>How to read this:</strong> Positive hours mean QFT saves staff time. The adverse case assumes QFT takes 20% longer and TST takes 20% less time. The favorable case reverses those changes. Negative hours mean QFT takes more time.</p>
+<h2 id="timeTitle">Staff hours saved under different workflow assumptions</h2>
+<p class="presentation-caption" id="timeCaption"></p>
+<p class="note presentation-note">Adverse: QFT‑Plus takes 20% longer and TST takes 20% less time. Favorable reverses both changes. Negative hours mean more time with QFT‑Plus.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Workforce hours saved by state">
 <table><thead><tr><th scope="col">State</th><th scope="col">Positivity setting</th><th scope="col">QFT base hours</th><th scope="col">TST base hours</th><th scope="col">Adverse hours saved</th><th scope="col">Base hours saved</th><th scope="col">Favorable hours saved</th></tr></thead><tbody id="timeRows"></tbody></table>
 </div><p class="note">The time scenarios report hours. The calculator uses separate labor-cost lookup values for dollar estimates.</p>
+<p class="presentation-takeaway"><strong>Takeaway</strong> <span id="timeSummary"></span></p>
 </section>
 </main>
 <script>
@@ -432,7 +447,11 @@ const studyBase = {qPrice:29.43,tPrice:12.50};
 let studyPrices = {...studyBase};
 let activeView = 'calculatorView';
 function renderFindings(hires) {
-  element('studyAppliedPrices').textContent = 'Prices used in the six-state comparison: QFT '+usd(studyPrices.qPrice)+' and TST '+usd(studyPrices.tPrice)+' per test.';
+  const context = fmt(hires)+' new hires per hospital per year · In-house QFT‑Plus vs. two-step TST';
+  const selected = context+' · '+usd(studyPrices.qPrice)+' per QFT‑Plus test / '+usd(studyPrices.tPrice)+' per TST';
+  for (const id of ['findings','positivity','time']) element(id+'Caption').textContent = selected;
+  element('breakEvenCaption').textContent = context+' · TST prices '+[10,12.50,15].map(usd).join(', ')+' · QFT‑Plus comparison price '+usd(studyPrices.qPrice);
+  element('priceCaption').textContent = context+' · Survey Input · Original study price range';
   element('findingsVolume').textContent = fmt(hires)+' new hires per hospital per year';
   const scenario = {
     facility:'Hospital', process:'In-house', draw:'In-house',
@@ -453,8 +472,8 @@ function renderFindings(hires) {
     '<td>'+(Math.abs(change) < 0.005 ? 'Same' : usd(Math.abs(change))+(change < 0 ? ' less' : ' more'))+'</td></tr>'
   ).join('');
   const largest = results.reduce((a,b) => Math.abs(a.change) >= Math.abs(b.change) ? a : b);
-  element('findingsSummary').textContent = largest.state+' has the largest change in annual savings ('+
-    usd(Math.abs(largest.change))+' '+(largest.change < 0 ? 'lower' : 'higher')+' with the state defaults).';
+  const savesUnderBoth = results.filter(({defaultsRun,excelRun}) => defaultsRun.gain > 0 && excelRun.gain > 0).length;
+  element('findingsSummary').textContent = 'QFT‑Plus costs less in '+savesUnderBoth+' of '+results.length+' states under both positivity assumptions. '+largest.state+' shows the largest difference: '+usd(largest.defaultsRun.gain)+' in savings with Survey Input versus '+usd(largest.excelRun.gain)+' with Excel formulas.';
 
   const priceResults = [27.26,29.43,60].map(qPrice => ({
     qPrice,
@@ -473,8 +492,8 @@ function renderFindings(hires) {
     ).join('')+'</tr>'
   ).join('');
   const totals = priceResults.flatMap(row => row.outcomes.map(outcome => outcome.total));
-  element('priceSummary').textContent = 'Across the nine price combinations, combined annual savings range from '+
-    usd(Math.min(...totals))+' to '+usd(Math.max(...totals))+'.';
+  const savingCombinations = totals.filter(total => total > 0).length;
+  element('priceSummary').textContent = 'Combined annual savings are positive in '+savingCombinations+' of '+totals.length+' price combinations, ranging from '+usd(Math.min(...totals))+' to '+usd(Math.max(...totals))+'.';
 
   element('breakEvenRows').innerHTML = results.map(({state,defaultsRun,excelRun}) => {
     const ceilings = [defaultsRun,excelRun].flatMap(run => [10,12.50,15].map(tPrice =>
@@ -483,6 +502,18 @@ function renderFindings(hires) {
       '<td>'+(value < scenario.qPrice ? '<strong>'+usd(value)+'</strong>' : usd(value))+'</td>').join('')+'</tr>';
   }).join('');
 
+  const withinRange = new Set();
+  for (const {state, defaultsRun, excelRun} of results) {
+    for (const run of [defaultsRun, excelRun]) {
+      const atLowTst = scenario.qPrice+(run.gain+(10-scenario.tPrice)*run.tTests)/run.qPaid;
+      const atHighTst = scenario.qPrice+(run.gain+(15-scenario.tPrice)*run.tTests)/run.qPaid;
+      if (atLowTst <= 60 && atHighTst >= 27.26) withinRange.add(state);
+    }
+  }
+  element('breakEvenSummary').textContent = 'Across the modeled TST price range and both positivity assumptions, '+withinRange.size+' of '+results.length+' states reach break-even within the '+usd(27.26)+'–'+usd(60)+' QFT‑Plus study range.';
+  const laborDifference = (largest.defaultsRun.t.labor-largest.defaultsRun.q.labor)-(largest.excelRun.t.labor-largest.excelRun.q.labor);
+  const xrayDifference = (largest.defaultsRun.t.xray-largest.defaultsRun.q.xray)-(largest.excelRun.t.xray-largest.excelRun.q.xray);
+  element('positivitySummary').textContent = largest.state+' has the largest change in savings. Survey Input changes the labor contribution by '+usd(laborDifference)+' and the X-ray contribution by '+usd(xrayDifference)+'.';
   const hoursSaved = (run,qFactor=1,tFactor=1) => run.qHours === null || run.tHours === null
     ? null : run.tHours*tFactor-run.qHours*qFactor;
   element('positivityRows').innerHTML = results.map(({state,defaultsRun,excelRun}) => {
@@ -496,6 +527,8 @@ function renderFindings(hires) {
     return '<tr><th scope="row">'+state+'</th>'+values.map(value=>'<td>'+value+'</td>').join('')+'</tr>';
   }).join('');
 
+  const adverseSaves = results.filter(({defaultsRun,excelRun}) => [defaultsRun,excelRun].every(run => hoursSaved(run,1.2,0.8) > 0)).length;
+  element('timeSummary').textContent = 'Even in the adverse workflow, QFT‑Plus saves staff time in '+adverseSaves+' of '+results.length+' states under both positivity assumptions.';
   element('timeRows').innerHTML = results.flatMap(({state,defaultsRun,excelRun}) =>
     [[defaultsRun,'State defaults'],[excelRun,'Excel formulas']].map(([run,label]) => {
       const values = [run.qHours,run.tHours,hoursSaved(run,1.2,0.8),hoursSaved(run),hoursSaved(run,0.8,1.2)];
