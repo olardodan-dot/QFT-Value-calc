@@ -86,16 +86,17 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <label>TST price / test ($)<input id="tPrice" type="number" min="0" step="0.01" value="10" required></label>
 <label>TST non-return (%)<input id="nonreturn" type="number" min="0" max="100" step="any" value="25" required></label>
 <label id="feeLabel" hidden>Cash charge ($)<input id="fee" type="number" min="0" step="0.01" value="12" required></label>
-<label>QFT test reimbursement ($)<input id="qRate" type="number" min="0" step="0.01" value="61.98" required></label>
-<label>QFT draw reimbursement ($)<input id="drawRate" type="number" min="0" step="0.01" value="5" required></label>
-<label>TST reimbursement ($)<input id="tRate" type="number" min="0" step="0.01" value="10.82" required></label>
+<p class="note price-help" id="reimbursementEligibility">Reimbursement applies to the Patients group only. Current employees and new hires generate $0 in reimbursement.</p>
+<label>QFT test reimbursement ($)<input id="qRate" aria-describedby="reimbursementEligibility" type="number" min="0" step="0.01" value="61.98" required></label>
+<label>QFT draw reimbursement ($)<input id="drawRate" aria-describedby="reimbursementEligibility" type="number" min="0" step="0.01" value="5" required></label>
+<label>TST reimbursement ($)<input id="tRate" aria-describedby="reimbursementEligibility" type="number" min="0" step="0.01" value="10.82" required></label>
 <label>X-ray cost ($)<input id="xPrice" type="number" min="0" step="0.01" value="200" required></label>
 </div>
 <label>Positive-result rates<select id="positiveRateSource"><option value="state">State Defaults (Survey Input)</option><option value="excel">Excel formulas</option></select></label>
 <label class="check"><input type="checkbox" id="xray" checked>Include in-house X-rays</label>
 <details class="excel-validation"><summary>Advanced · Excel validation</summary>
 <label class="check"><input type="checkbox" id="legacyXray">Use Excel X-ray handling</label>
-<label class="check"><input type="checkbox" id="legacyReimbursement">Use Excel reimbursement handling</label>
+<label class="check"><input type="checkbox" id="legacyReimbursement">Match legacy Excel reimbursement (validation only)</label>
 </details>
 </details>
 <button class="secondary" type="reset">Reset scenario</button>
@@ -357,7 +358,11 @@ function render() {
     row('Product and labor subtotal',q.product+q.labor,t.product+t.labor,'Annual test product costs plus labor costs.',usd)+
     row('X-ray cost',q.xray,t.xray,input.xray ? 'Estimated positive results × '+usd(input.xPrice)+' per X-ray.' : 'In-house X-rays are off for this cost summary.',usd)+
     row('Total cost',q.cost,t.cost,'Product + labor + in-house X-ray costs. '+incomeNote,usd,'total')+
-    row('Cost per person',q.cost/people,t.cost/people,'Total cost ÷ '+fmt(people)+' people screened.',usd)+'</tbody></table></div>';
+    row('Cost per person',q.cost/people,t.cost/people,'Total cost ÷ '+fmt(people)+' people screened.',usd)+
+    group('5. Patient reimbursement')+
+    row('Modeled reimbursement',q.reimbursement,t.reimbursement,input.patients > 0
+      ? 'Patient claims only: '+fmt(data.qReimbursed)+' for QFT and '+fmt(data.tReimbursed)+' for TST. Reimbursement affects the financial headline.'
+      : 'No patients entered. New hires and current employees generate $0 in reimbursement.',usd)+'</tbody></table></div>';
 }
 
 function applyStateDefaults() {
