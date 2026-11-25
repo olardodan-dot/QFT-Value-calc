@@ -44,6 +44,8 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 .result-table tr.total th,.result-table tr.total td{background:#def2e7;border-top:1px solid #a7c8b7;font-weight:750}
 .result-table tbody tr:last-child>*{border-bottom:0}
 @media print{.result-table th,.result-table td{padding:5px 7px}.result-table thead th{background:#e0ebe5!important;color:#20322d}.result-table td:nth-child(2),.result-table td:nth-child(3){white-space:normal}}
+.applied-price{display:block;margin:5px 0 12px;padding:9px 10px;min-height:40px;border:1px solid #dbe3e0;border-radius:7px;background:#f4f8f6;color:#23463d;font-size:.9rem;font-weight:700}
+.applied-price-help{display:block;margin:-6px 0 12px;color:#486678;font-size:.75rem;line-height:1.35}
 </style>
 </head>
 <body>
@@ -74,7 +76,8 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <div class="grid">
 <label>QFT price source<select id="priceSource"><option value="contract">Contract</option><option value="noncontract">Non-contract</option><option value="public">Public Health</option><option value="government">Government</option></select></label>
 <label id="yearLabel" hidden>Pricing year<select id="year"></select></label>
-<label id="manualLabel">Contract price / test ($)<input id="qPrice" type="number" min="0" step="0.01" required></label>
+<div id="appliedPriceField" hidden><label for="appliedPrice">QFT price / test</label><output id="appliedPrice" class="applied-price" aria-describedby="appliedPriceHelp"></output><small id="appliedPriceHelp" class="applied-price-help"></small></div>
+<label id="manualLabel">QFT contract price / test ($)<input id="qPrice" type="number" min="0" step="0.01" required></label>
 <label>TST price / test ($)<input id="tPrice" type="number" min="0" step="0.01" value="10" required></label>
 <label>TST non-return (%)<input id="nonreturn" type="number" min="0" max="100" step="any" value="25" required></label>
 <label id="feeLabel" hidden>Cash charge ($)<input id="fee" type="number" min="0" step="0.01" value="12" required></label>
@@ -277,6 +280,15 @@ function render() {
   element('context').textContent = [input.state,input.facility,input.process,input.draw,input.positiveRateSource === 'excel' ? 'Excel positive-rate formulas' : 'State Defaults (Survey Input)'].join(' · ');
   const valid = form.checkValidity();
   const data = valid ? calculate(input) : null;
+  element('appliedPriceField').hidden = manual;
+  if (!manual) {
+    const volumeTier = input.priceSource === 'noncontract';
+    const price = volumeTier ? (data?.people ? data.qPrice : null) : annualPrices[input.priceSource][input.year];
+    element('appliedPrice').textContent = price == null ? 'Pending' : unitPrice.format(price);
+    element('appliedPriceHelp').textContent = volumeTier
+      ? (price == null ? 'Enter screening volume to see the applicable tier.' : 'Volume tier based on '+fmt(data.qVolume)+' annual QFT tests.')
+      : 'From the '+input.year+' pricing table.';
+  }
   element('print').disabled = !data?.people;
   if (!data?.people) {
     element('result').innerHTML = '<p class="banner">'+(valid ? 'Enter annual screening volume to see the comparison.' : manual && element('qPrice').validity.valueMissing ? 'Enter the QFT contract price per test to see the comparison.' : 'Enter valid nonnegative values in the visible fields.')+'</p>';
