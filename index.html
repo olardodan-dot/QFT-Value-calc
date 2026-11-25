@@ -16,6 +16,8 @@ button{font:inherit;font-weight:700;border:1px solid var(--green);border-radius:
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.91rem}th,td{text-align:right;padding:9px 5px;border-bottom:1px solid var(--line)}th:first-child{text-align:left}tbody th{font-weight:500}tr.group th{background:#edf4f7;font-weight:700}tr.total{background:#e5f5ef;font-weight:700}tr.total th{font-weight:700}small{font-size:.8rem}
 @media(max-width:770px){main{grid-template-columns:1fr;padding:14px;gap:10px}}@media print{body,header{background:white;color:black}header{padding:0 0 12px}header p{color:black}main{display:block;padding:0}.inputs,button{display:none}section,details{border:0;padding:0}tr{break-inside:avoid}table{font-size:10pt}th,td{padding:4px}}
 .views{max-width:1190px;margin:0 auto;padding:16px 24px 0;display:flex;gap:8px;flex-wrap:wrap}
+.analysis-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.analysis-tabs-label{font-size:.85rem;font-weight:700;margin:0 3px 0 6px}
 .views button[aria-pressed="false"]{background:white;color:var(--green)}
 main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{min-width:620px}
 @media print{.views{display:none}}
@@ -56,9 +58,12 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <header><h1>QuantiFERON Value Calculator</h1><p>Annual comparison of QuantiFERON‑TB Gold Plus and tuberculin skin testing</p></header>
 <nav class="views" aria-label="Calculator views">
 <button type="button" id="calculatorView" aria-pressed="true" aria-controls="calculatorPanel">Calculator</button>
-<button type="button" id="findingsView" aria-pressed="false" aria-controls="findingsPanel">Sensitivity Analysis on Multicenter Cost</button>
+<div class="analysis-tabs" role="group" aria-labelledby="analysisTabsLabel">
+<span class="analysis-tabs-label" id="analysisTabsLabel">Sensitivity Analysis</span>
+<button type="button" id="findingsView" aria-pressed="false" aria-controls="findingsPanel">1,000 new hires</button>
 <button type="button" id="hires1500" aria-pressed="false" aria-controls="findingsPanel">1,500 new hires</button>
 <button type="button" id="hires2000" aria-pressed="false" aria-controls="findingsPanel">2,000 new hires</button>
+</div>
 </nav>
 <main id="calculatorPanel">
 <form class="inputs" id="scenario">
