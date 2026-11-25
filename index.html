@@ -66,6 +66,9 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 .break-even-table thead th[scope="colgroup"]:last-child{border-left:2px solid #849d98;background:#e5f2ed}
 .break-even-table thead tr:nth-child(2) th:nth-child(4),
 .break-even-table tbody td:nth-child(5){border-left:2px solid #849d98}
+.positivity-overview th:nth-child(2),.positivity-overview td:nth-child(2){text-align:left}
+.positivity-details{margin:12px 0 0;padding:10px 12px}
+@media print{.positivity-details:not([open]){display:none}}
 </style>
 </head>
 <body>
@@ -181,12 +184,17 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 </div><p class="presentation-takeaway"><strong>Takeaway</strong> <span id="breakEvenSummary"></span></p>
 </section>
 <section aria-labelledby="positivityTitle">
-<h2 id="positivityTitle">Effect of positivity assumptions on costs and staff time</h2>
+<h2 id="positivityTitle">How survey positivity rates change QFT‑Plus savings</h2>
 <p class="presentation-caption" id="positivityCaption"></p>
-<p class="note presentation-note">Pairs show Survey Input / Excel formulas. Positive dollar amounts are savings with QFT‑Plus.</p>
-<div class="table-scroll" tabindex="0" role="region" aria-label="Positive results and savings drivers">
-<table><thead><tr><th>Site</th><th>QFT positives</th><th>TST positives</th><th>Hours saved</th><th>Product savings</th><th>Labor savings</th><th>X-ray savings</th><th>QFT saves at selected prices</th></tr></thead><tbody id="positivityRows"></tbody></table>
-</div><p class="presentation-takeaway"><strong>Takeaway</strong> <span id="positivitySummary"></span></p>
+<p class="note presentation-note">Changes compare Survey Input with the Excel formulas at the prices shown.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Impact of survey positivity rates">
+<table class="positivity-overview"><thead><tr><th scope="col">Site</th><th scope="col">What changed with Survey Input?</th><th scope="col">Staff hours saved</th><th scope="col">Annual savings</th><th scope="col">Did QFT‑Plus still cost less?</th></tr></thead><tbody id="positivityOverviewRows"></tbody></table>
+</div>
+<p class="presentation-takeaway"><strong>Takeaway</strong> <span id="positivitySummary"></span></p>
+<details class="positivity-details"><summary>View calculation details</summary>
+<p class="note">Each pair shows Survey Input / Excel formulas. Positive dollar amounts indicate savings with QFT‑Plus.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Detailed positivity comparison"><table><thead><tr><th>Site</th><th>QFT positives</th><th>TST positives</th><th>Hours saved</th><th>Product savings</th><th>Labor savings</th><th>X-ray savings</th><th>QFT saves at selected prices</th></tr></thead><tbody id="positivityRows"></tbody></table></div>
+</details>
 </section>
 <section aria-labelledby="priceTitle">
 <h2 id="priceTitle">Annual savings at different test prices</h2>
@@ -517,11 +525,36 @@ function renderFindings(hires) {
     }
   }
   element('breakEvenSummary').textContent = 'Across the modeled TST price range and both positivity assumptions, '+withinRange.size+' of '+results.length+' sites reach break-even within the '+usd(27.26)+'–'+usd(60)+' QFT‑Plus study range.';
-  const laborDifference = (largest.defaultsRun.t.labor-largest.defaultsRun.q.labor)-(largest.excelRun.t.labor-largest.excelRun.q.labor);
-  const xrayDifference = (largest.defaultsRun.t.xray-largest.defaultsRun.q.xray)-(largest.excelRun.t.xray-largest.excelRun.q.xray);
-  element('positivitySummary').textContent = studySite(largest.state)+' has the largest change in savings. Survey Input changes the labor contribution by '+usd(laborDifference)+' and the X-ray contribution by '+usd(xrayDifference)+'.';
   const hoursSaved = (run,qFactor=1,tFactor=1) => run.qHours === null || run.tHours === null
     ? null : run.tHours*tFactor-run.qHours*qFactor;
+  element('positivityOverviewRows').innerHTML = results.map(({state,defaultsRun,excelRun,change}) => {
+    const positives = [['QFT‑Plus','qPositive'],['TST','tPositive']]
+      .filter(([,key]) => excelRun[key] !== defaultsRun[key])
+      .map(([name,key]) => name+' positives: '+fmt(excelRun[key])+' to '+fmt(defaultsRun[key]));
+    const surveyHours = hoursSaved(defaultsRun);
+    const excelHours = hoursSaved(excelRun);
+    const hourChange = surveyHours === null || excelHours === null ? null : surveyHours-excelHours;
+    const hours = hourChange === null ? 'Unavailable' : Math.abs(hourChange) < 0.05 ? 'No change'
+      : fmt(Math.abs(hourChange))+(hourChange < 0 ? ' fewer hours saved' : ' more hours saved');
+    const savings = Math.abs(change) < 0.005 ? 'No change' : usd(Math.abs(change))+(change < 0 ? ' less saved' : ' more saved');
+    const verdict = defaultsRun.gain > 0
+      ? (excelRun.gain > 0 ? 'Yes, under both' : 'Survey Input only')
+      : (excelRun.gain > 0 ? 'Excel formulas only' : 'Neither assumption');
+    const values = [positives.join(' · ') || 'Same positive counts',hours,savings,verdict];
+    return '<tr><th scope="row">'+studySite(state)+'</th>'+values.map(value=>'<td>'+value+'</td>').join('')+'</tr>';
+  }).join('');
+
+  const {defaultsRun,excelRun} = largest;
+  const costChanges = [['QFT‑Plus',defaultsRun.q,excelRun.q],['TST',defaultsRun.t,excelRun.t]]
+    .flatMap(([name,survey,excel]) => [['labor','follow-up labor'],['xray','X-rays']]
+      .map(([key,label]) => ({name,label,delta:survey[key]-excel[key]})))
+    .filter(({delta}) => Math.abs(delta) >= 0.005)
+    .map(({name,label,delta}) => name+' '+label+' costs are '+usd(Math.abs(delta))+(delta<0?' lower':' higher'));
+  const outcome = defaultsRun.gain > 0 ? usd(defaultsRun.gain)+' in estimated annual QFT‑Plus savings'
+    : defaultsRun.gain < 0 ? usd(-defaultsRun.gain)+' in estimated additional annual costs with QFT‑Plus' : 'equal estimated annual costs';
+  element('positivitySummary').textContent = costChanges.length
+    ? studySite(largest.state)+' has the largest change in savings. With Survey Input, '+costChanges.join(' and ')+', resulting in '+outcome+'.'
+    : 'Estimated annual savings are the same under both positivity assumptions.';
   element('positivityRows').innerHTML = results.map(({state,defaultsRun,excelRun}) => {
     const runs = [defaultsRun,excelRun];
     const pair = (value,format) => runs.map(run => format(value(run))).join(' / ');
