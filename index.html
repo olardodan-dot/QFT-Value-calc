@@ -19,6 +19,31 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font
 .views button[aria-pressed="false"]{background:white;color:var(--green)}
 main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{min-width:620px}
 @media print{.views{display:none}}
+.calculation-note{text-align:left;line-height:1.4;color:#486678;font-size:.83em;width:42%}
+@media print{.table-scroll{overflow:visible}.table-scroll table{min-width:0}}
+.summary-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 16px}
+.summary-metrics .banner{margin:0;padding:12px;min-width:0}
+.summary-metrics .banner strong{font-size:1.2rem;margin-bottom:4px}
+.summary-metrics .banner span{display:block;font-size:.82rem;line-height:1.35}
+@media screen and (max-width:540px){.summary-metrics{grid-template-columns:1fr}}
+@media print{.summary-metrics{break-inside:avoid}}
+.result-table-frame{border:1px solid #dbe3e0;border-radius:8px;background:#fff}
+.result-table{table-layout:fixed;color:#20322d}
+.result-table th,.result-table td{padding:11px 12px;border-bottom:1px solid #e6ece9}
+.result-table thead th{background:#23463d;color:#fff;font-size:.8rem;line-height:1.25;vertical-align:bottom}
+.result-table thead th:first-child{width:30%}
+.result-table thead th:nth-child(2),.result-table thead th:nth-child(3){width:15%}
+.result-table thead th:nth-child(2){background:#08634e}
+.result-table thead th:last-child{width:40%}
+.result-table tbody th[scope="row"]{font-weight:600}
+.result-table td:nth-child(2),.result-table td:nth-child(3){font-weight:650;white-space:nowrap}
+.result-table td:nth-child(2){background:#eff8f3;color:#08634e;border-left:1px solid #d9eadf}
+.result-table td:nth-child(3){background:#f4f6f5}
+.result-table .calculation-note{font-size:.8rem;line-height:1.45}
+.result-table tr.group th{background:#e0ebe5;color:#274c40;padding:8px 12px;border-top:1px solid #d1dfd7;text-transform:uppercase;letter-spacing:.05em;font-size:.72rem}
+.result-table tr.total th,.result-table tr.total td{background:#def2e7;border-top:1px solid #a7c8b7;font-weight:750}
+.result-table tbody tr:last-child>*{border-bottom:0}
+@media print{.result-table th,.result-table td{padding:5px 7px}.result-table thead th{background:#e0ebe5!important;color:#20322d}.result-table td:nth-child(2),.result-table td:nth-child(3){white-space:normal}}
 </style>
 </head>
 <body>
@@ -190,8 +215,9 @@ function calculate(input) {
   const california = input.state === 'California';
   const qFollowUpMinutes = california ? hospitalFollowUpMinutes : profile.positiveMinutes?.[0];
   const tFollowUpMinutes = california || input.state === 'Rhode Island' ? profile.positiveMinutes?.[1] : hospitalFollowUpMinutes;
+  const nonreturnMinutes = 5;
   const qHours = profile.minutes ? (profile.minutes[0]*qTests+qFollowUpMinutes*qPositive)/60 : null;
-  const tHours = profile.minutes ? (profile.minutes[1]*(tTests-nonreturns)+tFollowUpMinutes*tPositive+5*nonreturns)/60 : null;
+  const tHours = profile.minutes ? (profile.minutes[1]*(tTests-nonreturns)+tFollowUpMinutes*tPositive+nonreturnMinutes*nonreturns)/60 : null;
 
   const patientClaims = results[0].qCount;
   const labClaims = inHouse ? patientClaims : 0;
@@ -212,7 +238,7 @@ function calculate(input) {
   }
   const q = financial(qPositive,qLabor,qPaid*qPrice,qReimbursement);
   const t = financial(tPositive,tLabor,tTests*input.tPrice,tReimbursement);
-  return {people,repeats,nonreturns,second,qTests,tTests,qPaid,qPrice,qHours,tHours,qPositive,tPositive,
+  return {qVolume,visitMinutes:profile.minutes,qFollowUpMinutes,tFollowUpMinutes,nonreturnMinutes,people,repeats,nonreturns,second,qTests,tTests,qPaid,qPrice,qHours,tHours,qPositive,tPositive,
     qNegative:Math.round(sum('qNegative')),tNegative:Math.round(sum('tNegative')),qReimbursed,tReimbursed,q,t,gain:q.net-t.net};
 }
 
@@ -230,8 +256,10 @@ const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',max
 const unitPrice = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:5});
 const fmt = value => value === null ? 'Unavailable' : count.format(value);
 const usd = value => money.format(value);
-const row = (label,q,t,format=fmt,kind='') => '<tr class="'+kind+'"><th scope="row">'+label+'</th><td>'+format(q)+'</td><td>'+format(t)+'</td></tr>';
-const group = label => '<tr class="group"><th colspan="3">'+label+'</th></tr>';
+const row = (label,q,t,note,format=fmt,kind='') =>
+  '<tr class="'+kind+'"><th scope="row">'+label+'</th><td>'+format(q)+'</td><td>'+format(t)+
+  '</td><td class="calculation-note">'+note+'</td></tr>';
+const group = label => '<tr class="group"><th colspan="4">'+label+'</th></tr>';
 
 function render() {
   const input = Object.fromEntries(Array.from(form.elements).filter(field => field.id).map(field => [
@@ -254,21 +282,56 @@ function render() {
     return;
   }
   const {q,t,people} = data;
-  const banner = '<div class="banner '+(data.gain<0?'loss':'')+'">Estimated annual financial impact of switching to QFT‑Plus<strong>'+usd(data.gain)+'</strong></div>';
+  const impactLabel = q.income || t.income || input.legacy
+    ? 'Estimated annual financial impact of switching to QFT‑Plus'
+    : data.gain >= 0 ? 'Estimated annual savings with QFT‑Plus' : 'Estimated additional annual cost with QFT‑Plus';
+  const impact = q.income || t.income || input.legacy ? data.gain : Math.abs(data.gain);
+  const hoursSaved = data.qHours === null || data.tHours === null ? null : data.tHours-data.qHours;
+  const fewerPositives = data.tPositive-data.qPositive;
+  const metric = (title,value,label,adverse) =>
+    '<div class="banner '+(adverse?'loss':'')+'"><span>'+title+'</span><strong>'+value+
+    '</strong><span>'+label+'</span></div>';
+  const summary = '<p class="note">TB treatment costs are excluded.</p><div class="summary-metrics" aria-label="Annual impact of switching to QFT‑Plus">'+
+    metric('Operational efficiency',hoursSaved === null ? 'Unavailable' : fmt(Math.abs(hoursSaved))+' hours',
+      hoursSaved === null ? 'Workforce time comparison' : hoursSaved < 0 ? 'More staff time with QFT‑Plus' : 'Staff time saved with QFT‑Plus',hoursSaved < 0)+
+    metric('Financial efficiency',usd(impact),impactLabel,data.gain < 0)+
+    metric('Medical efficiency',fmt(Math.abs(fewerPositives)),fewerPositives < 0
+      ? 'More estimated positive results with QFT‑Plus' : 'Fewer estimated positive results with QFT‑Plus',fewerPositives < 0)+
+    '</div>';
   const legacy = input.legacy ? '<p class="note alert">Excel rules mode is on. The P&amp;L cost can include X-rays even when the in-house X-ray setting is off. Reimbursement follows the workbook’s single-rate rule.</p>' : '';
-  element('result').innerHTML = banner+legacy+'<table><thead><tr><th scope="col">Annual estimate</th><th scope="col">QFT‑Plus</th><th scope="col">TST</th></tr></thead><tbody>'+
-    group('Screening and workload')+
-    row('People screened',people,people)+row('Positive results',data.qPositive,data.tPositive)+row('Negative results',data.qNegative,data.tNegative)+
-    row('Repeat tests',data.repeats,0)+row('Non-returns',0,data.nonreturns)+row('Second tests for new hires',0,data.second)+
-    row('Total tests',data.qTests,data.tTests)+row('Tests with product cost',data.qPaid,data.tTests)+row('Workforce hours',data.qHours,data.tHours)+
-    group('Costs and income')+
-    row('Price per test',data.qPrice,input.tPrice,value=>unitPrice.format(value))+
-    row('Product cost',q.product,t.product,usd)+row('Labor cost',q.labor,t.labor,usd)+row('X-ray cost',q.xray,t.xray,usd)+
-    row('Total cost',q.cost,t.cost,usd)+row('Cost per person',q.cost/people,t.cost/people,usd)+
-    row('Reimbursed tests or draws',data.qReimbursed,data.tReimbursed)+row('Reimbursement income',q.reimbursement,t.reimbursement,usd)+
-    row('Cash income',q.income-q.reimbursement,t.income-t.reimbursement,usd)+
-    row('Total income',q.income,t.income,usd)+row('Total cost used for P&L',q.financialCost,t.financialCost,usd)+
-    row('Profit / loss',q.net,t.net,usd,'total')+'</tbody></table>';
+  const profile = profiles[input.state];
+  const positiveNote = (name,rate) => input.positiveRateSource !== 'excel' && rate != null
+    ? name+': '+fmt(rate*100)+'% of people screened.'
+    : name+': estimated using the Excel formulas.';
+  const priceSource = {contract:'Entered contract price',noncontract:'Annual QFT volume tier',public:'Public Health table for '+input.year,government:'Government table for '+input.year};
+  const incomeNote = q.income || t.income
+    ? 'The headline also reflects modeled reimbursement and cash income.'
+    : 'This scenario has $0 modeled reimbursement and cash income.';
+  element('result').innerHTML = summary+legacy+'<div class="table-scroll result-table-frame" tabindex="0" role="region" aria-label="Annual comparison and calculation notes"><table class="result-table"><thead><tr><th scope="col">Annual estimate</th><th scope="col">QFT‑Plus</th><th scope="col">TST</th><th scope="col" class="calculation-note">How it’s calculated</th></tr></thead><tbody>'+
+    group('1. Screening and test volume')+
+    row('People screened',people,people,'Total people entered across the screening groups.')+
+    row('Positive results',data.qPositive,data.tPositive,positiveNote('QFT',profile.qPositiveRate)+' '+positiveNote('TST',profile.tPositiveRate))+
+    row('Negative results',data.qNegative,data.tNegative,'Estimated negative results under the selected positivity assumptions.')+
+    row('QFT repeats for indeterminate results',data.repeats,0,'QFT includes an estimated 0.9% repeat rate.')+
+    row('Non-returns',0,data.nonreturns,'TST applies the selected '+fmt(input.nonreturn)+'% non-return rate to people screened.')+
+    row('Second tests for new hires',0,data.second,input.two ? 'Adds one TST for each new hire under two-step screening.' : 'Two-step TST is off.')+
+    row('Total tests',data.qTests,data.tTests,'People screened plus modeled repeats, non-returns, and second tests, as applicable.')+
+    group('2. Product costs')+
+    row('Tests without a product charge',data.qVolume-data.qPaid,0,'Uses the model’s rounded QFT test volume and subtracts tests charged to the facility.')+
+    row('Tests with a product charge',data.qPaid,data.tTests,'Test counts used to calculate what the facility pays for.')+
+    row('Price per test',data.qPrice,input.tPrice,'QFT: '+priceSource[input.priceSource]+'. TST: entered price.',value=>unitPrice.format(value))+
+    row('Annual product cost',q.product,t.product,'Tests with a product charge × price per test.',usd,'total')+
+    group('3. Workforce time and labor')+
+    row('Minutes per visit',data.visitMinutes?.[0] ?? null,data.visitMinutes?.[1] ?? null,'Visit times used for the selected state.')+
+    row('Extra minutes per positive result',data.qFollowUpMinutes ?? null,data.tFollowUpMinutes ?? null,'Follow-up times used for the selected state and facility.')+
+    row('Minutes per non-return',null,data.nonreturnMinutes,'TST allocates time to each modeled non-return.',value=>value===null?'—':fmt(value))+
+    row('Annual workforce hours',data.qHours,data.tHours,'Visit minutes plus positive follow-up minutes. TST non-returns use the non-return time in place of visit time. Divide by 60.',fmt,'total')+
+    row('Annual labor cost',q.labor,t.labor,'Uses the workbook’s labor cost rates for the selected state and facility.',usd)+
+    group('4. Annual cost summary')+
+    row('Product and labor subtotal',q.product+q.labor,t.product+t.labor,'Annual test product costs plus labor costs.',usd)+
+    row('X-ray cost',q.xray,t.xray,input.xray ? 'Estimated positive results × '+usd(input.xPrice)+' per X-ray.' : 'In-house X-rays are off for this cost summary.',usd)+
+    row('Total cost',q.cost,t.cost,'Product + labor + in-house X-ray costs. '+incomeNote,usd,'total')+
+    row('Cost per person',q.cost/people,t.cost/people,'Total cost ÷ '+fmt(people)+' people screened.',usd)+'</tbody></table></div>';
 }
 
 function applyStateDefaults() {
