@@ -46,6 +46,10 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 @media print{.result-table th,.result-table td{padding:5px 7px}.result-table thead th{background:#e0ebe5!important;color:#20322d}.result-table td:nth-child(2),.result-table td:nth-child(3){white-space:normal}}
 .applied-price{display:block;margin:5px 0 12px;padding:9px 10px;min-height:40px;border:1px solid #dbe3e0;border-radius:7px;background:#f4f8f6;color:#23463d;font-size:.9rem;font-weight:700}
 .applied-price-help{display:block;margin:-6px 0 12px;color:#486678;font-size:.75rem;line-height:1.35}
+.assumption-fields{align-items:end}
+.price-help{grid-column:1/-1}
+.excel-validation{margin:10px 0 0;padding:10px;border-radius:6px}
+.excel-validation summary{margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -73,11 +77,12 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <label class="check"><input type="checkbox" id="two">Two-step TST for new hires</label>
 </section>
 <details open><summary>Cost and reimbursement assumptions</summary>
-<div class="grid">
+<div class="grid assumption-fields">
 <label>QFT price source<select id="priceSource"><option value="contract">Contract</option><option value="noncontract">Non-contract</option><option value="public">Public Health</option><option value="government">Government</option></select></label>
+<div id="appliedPriceField" hidden><label for="appliedPrice">QFT price / test ($)</label><output id="appliedPrice" class="applied-price" aria-describedby="appliedPriceHelp"></output></div>
+<label id="manualLabel">QFT price / test ($)<input id="qPrice" type="number" min="0" step="any" aria-describedby="appliedPriceHelp" required></label>
+<small id="appliedPriceHelp" class="applied-price-help price-help" hidden></small>
 <label id="yearLabel" hidden>Pricing year<select id="year"></select></label>
-<div id="appliedPriceField" hidden><label for="appliedPrice">QFT price / test</label><output id="appliedPrice" class="applied-price" aria-describedby="appliedPriceHelp"></output><small id="appliedPriceHelp" class="applied-price-help"></small></div>
-<label id="manualLabel">QFT contract price / test ($)<input id="qPrice" type="number" min="0" step="0.01" required></label>
 <label>TST price / test ($)<input id="tPrice" type="number" min="0" step="0.01" value="10" required></label>
 <label>TST non-return (%)<input id="nonreturn" type="number" min="0" max="100" step="any" value="25" required></label>
 <label id="feeLabel" hidden>Cash charge ($)<input id="fee" type="number" min="0" step="0.01" value="12" required></label>
@@ -88,7 +93,10 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 </div>
 <label>Positive-result rates<select id="positiveRateSource"><option value="state">State Defaults (Survey Input)</option><option value="excel">Excel formulas</option></select></label>
 <label class="check"><input type="checkbox" id="xray" checked>Include in-house X-rays</label>
-<label class="check"><input type="checkbox" id="legacy">Use Excel X-ray and reimbursement rules</label>
+<details class="excel-validation"><summary>Advanced · Excel validation</summary>
+<label class="check"><input type="checkbox" id="legacyXray">Use Excel X-ray handling</label>
+<label class="check"><input type="checkbox" id="legacyReimbursement">Use Excel reimbursement handling</label>
+</details>
 </details>
 <button class="secondary" type="reset">Reset scenario</button>
 </form>
@@ -100,7 +108,7 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <details open><summary>Model notes</summary>
 <p class="note">This draft uses the six state profiles and the labor lookup values saved in the source workbook. Screening outcomes are modeled estimates. TB treatment costs are excluded. Confirm pricing, reimbursement and labor assumptions before sharing an estimate.</p>
 <p class="note">By default, the X-ray setting applies to both cost and profit calculations. QFT reimbursement is based on the applicable patient claim type, with cash collected separately. Excel rules mode restores the workbook’s X-ray behavior and its single-rate reimbursement formula for comparison.</p>
-<p class="note">Contract uses the price you enter. Non-contract uses the Average QFT Pricing column in ContractPricingTable, based on annual QFT test volume. Public Health and Government use the Average pricing row from their respective workbook tables for the selected year.</p>
+<p class="note">Contract uses the price you enter. Non-contract uses the Average QFT Pricing column in ContractPricingTable, based on annual QFT test volume. Public Health and Government start at the selected year’s table price and allow a scenario override.</p>
 <p class="note">State defaults apply when you select a state. State defaults apply specified positive-result rates to the number of people screened and use the Excel formulas where a rate is unspecified. Excel formulas mode uses modeled positive results for both tests. Rhode Island uses its saved population inputs with the same formulas. Rhode Island timing uses the supplied visit and follow-up values.</p>
 <p class="note">Source workbook: QFT-TST-Value Calculator-Multi-Center.xlsm. This version covers the workbook’s Clinic and Hospital TST workflows. Excel parity with populated scenarios is pending.</p>
 </details>
@@ -205,7 +213,7 @@ function calculate(input) {
   const qPaid = qVolume - (inHouse ? 0 : qVolumes[0]);
   let qPrice = input.qPrice;
   if (input.priceSource === 'noncontract') qPrice = priceTiers.filter(([minimum]) => qVolume >= minimum).at(-1)[1];
-  if (input.priceSource in annualPrices) qPrice = annualPrices[input.priceSource][input.year];
+  if (input.priceSource in annualPrices && !Number.isFinite(qPrice)) qPrice = annualPrices[input.priceSource][input.year];
 
   const qLabor = results.slice(0,3).reduce((total,row,i) =>
     total+populations[i]*profile.q[clinic ? 11 : 10]+Math.round(row.qPositive)*profile.q[clinic ? 13 : 12],0);
@@ -227,7 +235,7 @@ function calculate(input) {
   const drawClaims = !inHouse && input.draw === 'In-house' ? patientClaims : 0;
   const qReimbursed = labClaims+drawClaims;
   const tReimbursed = Math.round(results[0].tPositive+results[0].tNegative);
-  const qReimbursement = input.legacy
+  const qReimbursement = input.legacyReimbursement
     ? qReimbursed*((labClaims+cash > 0 && drawClaims === 0) ? input.qRate : (labClaims+cash === 0 && drawClaims > 0) ? input.drawRate : 0)
     : labClaims*input.qRate+drawClaims*input.drawRate;
   const tReimbursement = tReimbursed*input.tRate;
@@ -236,7 +244,7 @@ function calculate(input) {
     const xray = input.xray ? positive*input.xPrice : 0;
     const cost = labor+product+xray;
     const income = reimbursement+cash*input.fee;
-    const financialCost = input.legacy ? labor+product+positive*input.xPrice : cost;
+    const financialCost = input.legacyXray ? labor+product+positive*input.xPrice : cost;
     return {labor,product,xray,cost,financialCost,reimbursement,income,net:income-financialCost};
   }
   const q = financial(qPositive,qLabor,qPaid*qPrice,qReimbursement);
@@ -270,7 +278,8 @@ function render() {
     field.id,field.type === 'number' ? field.valueAsNumber : field.type === 'checkbox' ? field.checked : field.value
   ]));
   const clinic = input.facility === 'Clinic';
-  const manual = input.priceSource === 'contract';
+  const volumeTier = input.priceSource === 'noncontract';
+  const manual = !volumeTier;
   element('cashLabel').hidden = element('feeLabel').hidden = !clinic;
   element('yearLabel').hidden = !(input.priceSource in annualPrices);
   element('manualLabel').hidden = !manual;
@@ -280,25 +289,28 @@ function render() {
   element('context').textContent = [input.state,input.facility,input.process,input.draw,input.positiveRateSource === 'excel' ? 'Excel positive-rate formulas' : 'State Defaults (Survey Input)'].join(' · ');
   const valid = form.checkValidity();
   const data = valid ? calculate(input) : null;
-  element('appliedPriceField').hidden = manual;
-  if (!manual) {
-    const volumeTier = input.priceSource === 'noncontract';
-    const price = volumeTier ? (data?.people ? data.qPrice : null) : annualPrices[input.priceSource][input.year];
+  element('appliedPriceField').hidden = !volumeTier;
+  element('appliedPriceHelp').hidden = input.priceSource === 'contract';
+  if (volumeTier) {
+    const price = data?.people ? data.qPrice : null;
     element('appliedPrice').textContent = price == null ? 'Pending' : unitPrice.format(price);
-    element('appliedPriceHelp').textContent = volumeTier
-      ? (price == null ? 'Enter screening volume to see the applicable tier.' : 'Volume tier based on '+fmt(data.qVolume)+' annual QFT tests.')
-      : 'From the '+input.year+' pricing table.';
+    element('appliedPriceHelp').textContent = price == null
+      ? 'Enter screening volume to see the applicable tier.'
+      : 'Volume tier based on '+fmt(data.qVolume)+' annual QFT tests.';
+  } else if (input.priceSource in annualPrices) {
+    const tablePrice = annualPrices[input.priceSource][input.year];
+    element('appliedPriceHelp').textContent = input.year+' table price: '+unitPrice.format(tablePrice)+'. You can edit the QFT price above.';
   }
   element('print').disabled = !data?.people;
   if (!data?.people) {
-    element('result').innerHTML = '<p class="banner">'+(valid ? 'Enter annual screening volume to see the comparison.' : manual && element('qPrice').validity.valueMissing ? 'Enter the QFT contract price per test to see the comparison.' : 'Enter valid nonnegative values in the visible fields.')+'</p>';
+    element('result').innerHTML = '<p class="banner">'+(valid ? 'Enter annual screening volume to see the comparison.' : manual && element('qPrice').validity.valueMissing ? 'Enter the QFT price per test to see the comparison.' : 'Enter valid nonnegative values in the visible fields.')+'</p>';
     return;
   }
   const {q,t,people} = data;
-  const impactLabel = q.income || t.income || input.legacy
+  const impactLabel = q.income || t.income || input.legacyXray || input.legacyReimbursement
     ? 'Estimated annual financial impact of switching to QFT‑Plus'
     : data.gain >= 0 ? 'Estimated annual savings with QFT‑Plus' : 'Estimated additional annual cost with QFT‑Plus';
-  const impact = q.income || t.income || input.legacy ? data.gain : Math.abs(data.gain);
+  const impact = q.income || t.income || input.legacyXray || input.legacyReimbursement ? data.gain : Math.abs(data.gain);
   const hoursSaved = data.qHours === null || data.tHours === null ? null : data.tHours-data.qHours;
   const fewerPositives = data.tPositive-data.qPositive;
   const metric = (title,value,label,adverse) =>
@@ -311,7 +323,8 @@ function render() {
     metric('Medical efficiency',fmt(Math.abs(fewerPositives)),fewerPositives < 0
       ? 'More estimated positive results with QFT‑Plus' : 'Fewer estimated positive results with QFT‑Plus',fewerPositives < 0)+
     '</div>';
-  const legacy = input.legacy ? '<p class="note alert">Excel rules mode is on. The P&amp;L cost can include X-rays even when the in-house X-ray setting is off. Reimbursement follows the workbook’s single-rate rule.</p>' : '';
+  const legacy = (input.legacyXray ? '<p class="note alert">Excel X-ray handling is on. The financial headline can include X-rays when the cost table excludes them.</p>' : '')+
+    (input.legacyReimbursement ? '<p class="note alert">Excel reimbursement handling is on. The workbook’s single-rate rule applies.</p>' : '');
   const profile = profiles[input.state];
   const positiveNote = (name,rate) => input.positiveRateSource !== 'excel' && rate != null
     ? name+': '+fmt(rate*100)+'% of people screened.'
@@ -354,11 +367,20 @@ function applyStateDefaults() {
 }
 
 let hadNewHires = false;
+let contractPrice = '';
+form.addEventListener('reset',() => { contractPrice = ''; });
 form.addEventListener('input',event => {
   if (event.target === element('hires')) {
     const hasNewHires = event.target.valueAsNumber > 0;
     if (hasNewHires !== hadNewHires) element('two').checked = hasNewHires;
     hadNewHires = hasNewHires;
+  }
+  const source = element('priceSource').value;
+  const price = element('qPrice');
+  if (event.target === price && source === 'contract') contractPrice = price.value;
+  if (event.target === element('priceSource') || event.target === element('year')) {
+    if (source in annualPrices) price.value = annualPrices[source][element('year').value];
+    else if (source === 'contract') price.value = contractPrice;
   }
   if (event.target === element('state')) applyStateDefaults();
   render();
@@ -373,7 +395,7 @@ function renderFindings(hires) {
     facility:'Hospital', process:'In-house', draw:'In-house',
     patients:0, employees:0, hires, cash:0, two:true,
     qPrice:29.43, tPrice:12.50, priceSource:'contract', fee:0,
-    qRate:61.98, drawRate:5, tRate:10.82, xray:true, legacy:false
+    qRate:61.98, drawRate:5, tRate:10.82, xray:true
   };
   const results = Object.entries(profiles).map(([state,profile]) => {
     const input = {...scenario,state,xPrice:profile.xray,nonreturn:profile.nonreturn ?? 25};
