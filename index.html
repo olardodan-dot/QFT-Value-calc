@@ -69,6 +69,37 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 .positivity-overview th:nth-child(2),.positivity-overview td:nth-child(2){text-align:left}
 .positivity-details{margin:12px 0 0;padding:10px 12px}
 @media print{.positivity-details:not([open]){display:none}}
+/* QIAGEN-inspired theme based on public corporate materials. */
+:root{--blue:#00386b;--green:#005b9f;--line:#d5e3ef;--brand-red:#cd0039;--ink:#102d47;background:#edf4fa;color:var(--ink)}
+header{background:linear-gradient(110deg,#002b55 8%,#004479 70%,#0064a7);border-bottom:4px solid var(--brand-red);padding:32px max(5vw,20px)}
+header h1{letter-spacing:-.035em}header p{color:#e5f3ff}
+.views{column-gap:12px;row-gap:8px}.views button{border-radius:8px}
+.views button[aria-pressed="true"]{box-shadow:0 3px 9px #00386b24}
+main section,main details{border-color:var(--line);box-shadow:0 3px 14px #193e6810}
+main section h2{color:#00386b;letter-spacing:-.015em}
+#findingsPanel>section{border-top:3px solid #1b70b1}
+#findingsPanel .table-scroll{border:1px solid var(--line);border-radius:8px}
+#findingsPanel thead th{background:#e5eff8;color:#00386b}
+#findingsPanel thead th[scope="colgroup"]{text-align:center}
+#findingsPanel .break-even-table thead th[scope="colgroup"]:last-child{background:#d3e8fa}
+#findingsPanel .break-even-table thead th[scope="colgroup"]:last-child,
+.break-even-table thead tr:nth-child(2) th:nth-child(4),
+.break-even-table tbody td:nth-child(5){border-left-color:#78a1c3}
+#findingsPanel tbody tr:nth-child(even){background:#f5f9fd}
+#findingsPanel td[style]{background:#dcebf9!important;color:#00386b}
+#findingsPanel .presentation-takeaway{background:#eaf3fb;border-left-color:#0064a7;color:#153a5c}
+.summary-metrics .banner{background:#e5f1fc;border-top:3px solid #0064a7;color:#00386b}
+.summary-metrics .banner.loss{background:#fff2f3;border-top-color:var(--brand-red);color:#8e1835}
+.result-table-frame{border-color:var(--line)}
+.result-table thead th{background:#00386b}
+.result-table thead th:nth-child(2){background:#005b9f}
+.result-table td:nth-child(2){background:#eaf4ff;color:#00386b;border-left-color:#d5e3ef}
+.result-table tr.group th,.result-table tr.total th,.result-table tr.total td{background:#dcebf9;color:#00386b;border-color:#adc9e2}
+.time-table .site-group{vertical-align:middle;background:#e5eff8;color:#00386b;font-weight:750}
+.time-table tbody tr.site-start:not(:first-child)>*{border-top:2px solid #afc8e0}
+.time-table tbody th[scope="row"]{text-align:left;font-weight:600}
+.time-table tbody td:nth-last-child(2){color:#00386b;font-weight:750;background:#eaf3fb}
+@media print{header{background:white;color:#00386b;border-bottom-width:2px;padding:0 0 10px}header p{color:#153a5c}main section,main details{box-shadow:none}.result-table thead th{color:#00386b}}
 </style>
 </head>
 <body>
@@ -209,7 +240,7 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <p class="presentation-caption" id="timeCaption"></p>
 <p class="note presentation-note">Adverse: QFT‑Plus takes 20% longer and TST takes 20% less time. Favorable reverses both changes. Negative hours mean more time with QFT‑Plus.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Workforce hours saved by site">
-<table><thead><tr><th scope="col">Site</th><th scope="col">Positivity setting</th><th scope="col">QFT base hours</th><th scope="col">TST base hours</th><th scope="col">Adverse hours saved</th><th scope="col">Base hours saved</th><th scope="col">Favorable hours saved</th></tr></thead><tbody id="timeRows"></tbody></table>
+<table class="time-table"><thead><tr><th scope="col">Site</th><th scope="col">Positivity setting</th><th scope="col">QFT base hours</th><th scope="col">TST base hours</th><th scope="col">Adverse hours saved</th><th scope="col">Base hours saved</th><th scope="col">Favorable hours saved</th></tr></thead><tbody id="timeRows"></tbody></table>
 </div><p class="note">The time scenarios report hours. The calculator uses separate labor-cost lookup values for dollar estimates.</p>
 <p class="presentation-takeaway"><strong>Takeaway</strong> <span id="timeSummary"></span></p>
 </section>
@@ -569,9 +600,10 @@ function renderFindings(hires) {
   const adverseSaves = results.filter(({defaultsRun,excelRun}) => [defaultsRun,excelRun].every(run => hoursSaved(run,1.2,0.8) > 0)).length;
   element('timeSummary').textContent = 'Even in the adverse workflow, QFT‑Plus saves staff time in '+adverseSaves+' of '+results.length+' sites under both positivity assumptions.';
   element('timeRows').innerHTML = results.flatMap(({state,defaultsRun,excelRun}) =>
-    [[defaultsRun,'Survey Inputs'],[excelRun,'Excel Prototype']].map(([run,label]) => {
+    [[defaultsRun,'Survey Inputs'],[excelRun,'Excel Prototype']].map(([run,label],index) => {
       const values = [run.qHours,run.tHours,hoursSaved(run,1.2,0.8),hoursSaved(run),hoursSaved(run,0.8,1.2)];
-      return '<tr><th scope="row">'+studySite(state)+'</th><td>'+label+'</td>'+
+      const siteCell = index === 0 ? '<th class="site-group" rowspan="2">'+studySite(state)+'</th>' : '';
+      return '<tr'+(index === 0 ? ' class="site-start"' : '')+'>'+siteCell+'<th scope="row">'+label+'</th>'+
         values.map(value=>'<td>'+fmt(value)+'</td>').join('')+'</tr>';
     })
   ).join('');
