@@ -83,7 +83,7 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <label>TST reimbursement ($)<input id="tRate" type="number" min="0" step="0.01" value="10.82" required></label>
 <label>X-ray cost ($)<input id="xPrice" type="number" min="0" step="0.01" value="200" required></label>
 </div>
-<label>Positive-result rates<select id="positiveRateSource"><option value="state">State defaults</option><option value="excel">Excel formulas</option></select></label>
+<label>Positive-result rates<select id="positiveRateSource"><option value="state">State Defaults (Survey Input)</option><option value="excel">Excel formulas</option></select></label>
 <label class="check"><input type="checkbox" id="xray" checked>Include in-house X-rays</label>
 <label class="check"><input type="checkbox" id="legacy">Use Excel X-ray and reimbursement rules</label>
 </details>
@@ -273,7 +273,7 @@ function render() {
   element('cash').disabled = element('fee').disabled = !clinic;
   element('qPrice').disabled = !manual;
   if (!clinic) input.fee = 0;
-  element('context').textContent = [input.state,input.facility,input.process,input.draw,input.positiveRateSource === 'excel' ? 'Excel positive-rate formulas' : 'State positive-rate defaults'].join(' · ');
+  element('context').textContent = [input.state,input.facility,input.process,input.draw,input.positiveRateSource === 'excel' ? 'Excel positive-rate formulas' : 'State Defaults (Survey Input)'].join(' · ');
   const valid = form.checkValidity();
   const data = valid ? calculate(input) : null;
   element('print').disabled = !data?.people;
