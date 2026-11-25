@@ -52,11 +52,17 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 .price-help{grid-column:1/-1}
 .excel-validation{margin:10px 0 0;padding:10px;border-radius:6px}
 .excel-validation summary{margin-bottom:4px}
+.study-prices{display:flex;flex-wrap:wrap;align-items:end;gap:8px 14px;margin:14px 0}
+.study-prices label{flex:0 1 175px}.study-prices input{margin-bottom:0}
+.study-prices .note{flex-basis:100%;margin:0}
+#helpPanel{max-width:960px}#helpPanel h3{margin:16px 0 4px}#helpPanel p{margin:6px 0 12px}
+@media print{.study-prices{display:none}}
 </style>
 </head>
 <body>
 <header><h1>QuantiFERON Value Calculator</h1><p>Annual comparison of QuantiFERON‑TB Gold Plus and tuberculin skin testing</p></header>
 <nav class="views" aria-label="Calculator views">
+<button type="button" id="helpView" aria-pressed="false" aria-controls="helpPanel">Start Here / FAQ</button>
 <button type="button" id="calculatorView" aria-pressed="true" aria-controls="calculatorPanel">Calculator</button>
 <div class="analysis-tabs" role="group" aria-labelledby="analysisTabsLabel">
 <span class="analysis-tabs-label" id="analysisTabsLabel">Sensitivity Analysis</span>
@@ -120,39 +126,62 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 </details>
 </article>
 </main>
+<main id="helpPanel" class="findings" hidden>
+<section aria-labelledby="helpTitle">
+<h2 id="helpTitle">Start Here / FAQ</h2>
+<h3>Which tab should I use?</h3>
+<p>Use <strong>Calculator</strong> for a custom scenario in one state. Use <strong>Sensitivity Analysis</strong> for the six-state study at 1,000, 1,500, or 2,000 new hires per hospital. Enter custom study prices once and they carry across the three study tabs. Calculator inputs are separate.</p>
+<h3>What does the study assume?</h3>
+<p>Each scenario models a hospital with in-house QFT processing and blood draw, two-step TST, and new hires only. Study base prices are <strong>$29.43 per QFT test</strong> and <strong>$12.50 per TST</strong>. The study uses state-specific X-ray costs and TST non-return rates.</p>
+<h3>Why did savings change when I switched positivity settings?</h3>
+<p><strong>State Defaults (Survey Input)</strong> uses a survey rate where supplied and the Excel formula elsewhere. For Rhode Island at 1,000 hires, the survey TST rate yields 50 estimated positives versus 71 with Excel. Fewer follow-ups lower TST costs, so QFT savings are smaller. At base prices QFT still costs less under both settings.</p>
+<h3>When does reimbursement count?</h3>
+<p>Only the <strong>Patients</strong> group generates modeled reimbursement. New hires and current employees generate $0 even when a reimbursement rate is visible. Eligible QFT claims depend on the processing and blood-draw settings. The Advanced Excel validation switches reproduce legacy workbook behavior. Leave them unchecked for normal use.</p>
+<h3>How do I reproduce a checked result?</h3>
+<p>In Calculator, select <strong>Oregon → Hospital → Send out → In-house blood draw</strong>. Enter <strong>1,000 patients</strong> and <strong>1,000 new hires</strong>, leave current employees at zero, and keep two-step TST enabled. Use Contract pricing with <strong>$30 QFT</strong> and <strong>$15 TST</strong>. Select Excel formulas for positive-result rates, keep in-house X-rays enabled, and leave both Advanced switches unchecked. Use <strong>$5.00 QFT draw reimbursement</strong> and <strong>$10.82 TST reimbursement</strong>.</p>
+<p>Under <strong>Patient reimbursement</strong>, expect <strong>$5,045 for QFT</strong> and <strong>$10,820 for TST</strong>. Set Patients to zero and both become $0.</p>
+</section></main>
 <main id="findingsPanel" class="findings" hidden>
 <section aria-labelledby="findingsTitle">
 <div class="report-head"><div><h2 id="findingsTitle">Sensitivity Analysis on Multicenter Cost</h2><p id="findingsVolume"></p></div><button type="button" id="printFindings">Print / PDF</button></div>
-<p>Each state uses in-house QFT processing and blood draw, two-step TST, $29.43 per QFT test and $12.50 per TST in the base case. State X-ray costs and TST non-compliance stay fixed across runs.</p>
+<p>Each tab is a preset hospital scenario with in-house QFT processing and blood draw, two-step TST, and state-specific X-ray costs and TST non-return rates. Switching tabs changes the new-hire count. Main Calculator inputs are separate.</p>
+<form class="study-prices" id="studyPrices">
+<label>QFT price per test ($)<input id="studyQft" type="number" min="0" step="0.01" value="29.43" required></label>
+<label>TST price per test ($)<input id="studyTst" type="number" min="0" step="0.01" value="12.50" required></label>
+<button class="secondary" type="reset">Restore study prices</button>
+<p class="note" id="studyPriceError" role="status"></p>
+</form>
+<p id="studyAppliedPrices"></p>
+<p class="note"><strong>How to read this:</strong> Savings equal TST cost minus QFT cost. The last column shows how much more or less QFT saves under the survey inputs compared with Excel. Check both Savings columns to see which method costs less.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Annual costs and savings by state"><table>
-<thead><tr><th rowspan="2" scope="col">State</th><th colspan="3" scope="colgroup">State positive-rate defaults</th><th colspan="3" scope="colgroup">Excel positive-rate formulas</th><th rowspan="2" scope="col">Change in savings</th></tr>
+<thead><tr><th rowspan="2" scope="col">State</th><th colspan="3" scope="colgroup">State Defaults (Survey Input)</th><th colspan="3" scope="colgroup">Excel positive-rate formulas</th><th rowspan="2" scope="col">Survey savings vs. Excel</th></tr>
 <tr><th scope="col">QFT cost</th><th scope="col">TST cost</th><th scope="col">Savings</th><th scope="col">QFT cost</th><th scope="col">TST cost</th><th scope="col">Savings</th></tr></thead>
 <tbody id="findingsRows"></tbody></table></div>
 <p id="findingsSummary"></p>
-<p class="note">Savings equal annual TST cost minus annual QFT cost. Change in savings equals the state-default result minus the Excel-formula result. Dollar figures are rounded after calculation. Rhode Island uses its saved population and labor inputs.</p>
+<p class="note">Dollar figures are rounded after calculation.</p>
 </section>
 <section aria-labelledby="breakEvenTitle">
 <h2 id="breakEvenTitle">Break-even QFT price per test</h2>
-<p>At these prices, QFT and TST have the same modeled annual cost. Bold values fall below the $29.43 QFT base price.</p>
+<p><strong>How to read this:</strong> Each cell shows the QFT price per test where annual costs are equal at the TST price in that column. Below it, QFT costs less. Above it, TST costs less. Bold values fall below the selected QFT price.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Break-even QFT prices">
 <table><thead><tr><th rowspan="2">State</th><th colspan="3" scope="colgroup">State defaults</th><th colspan="3" scope="colgroup">Excel formulas</th></tr><tr><th>TST $10</th><th>TST $12.50</th><th>TST $15</th><th>TST $10</th><th>TST $12.50</th><th>TST $15</th></tr></thead><tbody id="breakEvenRows"></tbody></table>
 </div></section>
 <section aria-labelledby="positivityTitle">
 <h2 id="positivityTitle">Impact of the positivity assumptions</h2>
-<p>Each pair shows state defaults / Excel formulas. A positive dollar contribution means QFT saves on that cost line.</p>
+<p><strong>How to read this:</strong> Each pair shows Survey Input / Excel Formulas. Positive dollar contributions show what QFT saves on each cost line. Where a survey rate is unavailable, both runs use the Excel formula for that test.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Positive results and savings drivers">
-<table><thead><tr><th>State</th><th>QFT positives</th><th>TST positives</th><th>Hours saved</th><th>Product savings</th><th>Labor savings</th><th>X-ray savings</th><th>QFT savings at base price</th></tr></thead><tbody id="positivityRows"></tbody></table>
+<table><thead><tr><th>State</th><th>QFT positives</th><th>TST positives</th><th>Hours saved</th><th>Product savings</th><th>Labor savings</th><th>X-ray savings</th><th>QFT saves at selected prices</th></tr></thead><tbody id="positivityRows"></tbody></table>
 </div></section>
 <section aria-labelledby="priceTitle">
 <h2 id="priceTitle">Price sensitivity</h2>
-<p>Annual QFT savings at each price combination, summed across six equally sized hospital scenarios. Uses state positive-rate defaults. The base case is shaded.</p>
+<p><strong>How to read this:</strong> Pick a QFT price on the left and a TST price across the top. Each cell shows combined annual savings and how many of the six modeled hospitals save with QFT. The fixed grid uses Survey Input, and the original study base prices are shaded.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Savings by QFT and TST prices">
 <table><thead><tr><th scope="col">QFT price per test</th><th scope="col">TST $10.00</th><th scope="col">TST $12.50</th><th scope="col">TST $15.00</th></tr></thead><tbody id="priceRows"></tbody></table>
 </div><p id="priceSummary"></p>
 </section>
 <section aria-labelledby="timeTitle">
 <h2 id="timeTitle">Staff time sensitivity</h2>
-<p>Annual hours saved under each positivity setting. The adverse case assumes QFT takes 20% longer and TST takes 20% less time. The favorable case reverses those changes. Negative hours mean QFT takes more time.</p>
+<p><strong>How to read this:</strong> Positive hours mean QFT saves staff time. The adverse case assumes QFT takes 20% longer and TST takes 20% less time. The favorable case reverses those changes. Negative hours mean QFT takes more time.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Workforce hours saved by state">
 <table><thead><tr><th scope="col">State</th><th scope="col">Positivity setting</th><th scope="col">QFT base hours</th><th scope="col">TST base hours</th><th scope="col">Adverse hours saved</th><th scope="col">Base hours saved</th><th scope="col">Favorable hours saved</th></tr></thead><tbody id="timeRows"></tbody></table>
 </div><p class="note">The time scenarios report hours. The calculator uses separate labor-cost lookup values for dollar estimates.</p>
@@ -399,12 +428,16 @@ form.addEventListener('reset',() => setTimeout(() => { defaults(); render(); },0
 element('print').addEventListener('click',() => window.print());
 element('printFindings').addEventListener('click',() => window.print());
 
+const studyBase = {qPrice:29.43,tPrice:12.50};
+let studyPrices = {...studyBase};
+let activeView = 'calculatorView';
 function renderFindings(hires) {
+  element('studyAppliedPrices').textContent = 'Prices used in the six-state comparison: QFT '+usd(studyPrices.qPrice)+' and TST '+usd(studyPrices.tPrice)+' per test.';
   element('findingsVolume').textContent = fmt(hires)+' new hires per hospital per year';
   const scenario = {
     facility:'Hospital', process:'In-house', draw:'In-house',
     patients:0, employees:0, hires, cash:0, two:true,
-    qPrice:29.43, tPrice:12.50, priceSource:'contract', fee:0,
+    ...studyPrices, priceSource:'contract', fee:0,
     qRate:61.98, drawRate:5, tRate:10.82, xray:true
   };
   const results = Object.entries(profiles).map(([state,profile]) => {
@@ -415,8 +448,9 @@ function renderFindings(hires) {
   });
   element('findingsRows').innerHTML = results.map(({state,defaultsRun,excelRun,change}) =>
     '<tr><th scope="row">'+state+'</th>'+
-    [defaultsRun.q.cost,defaultsRun.t.cost,defaultsRun.gain,excelRun.q.cost,excelRun.t.cost,excelRun.gain,change]
-      .map(value => '<td>'+usd(value)+'</td>').join('')+'</tr>'
+    [defaultsRun.q.cost,defaultsRun.t.cost,defaultsRun.gain,excelRun.q.cost,excelRun.t.cost,excelRun.gain]
+      .map(value => '<td>'+usd(value)+'</td>').join('')+
+    '<td>'+(Math.abs(change) < 0.005 ? 'Same' : usd(Math.abs(change))+(change < 0 ? ' less' : ' more'))+'</td></tr>'
   ).join('');
   const largest = results.reduce((a,b) => Math.abs(a.change) >= Math.abs(b.change) ? a : b);
   element('findingsSummary').textContent = largest.state+' has the largest change in annual savings ('+
@@ -434,7 +468,7 @@ function renderFindings(hires) {
   }));
   element('priceRows').innerHTML = priceResults.map(({qPrice,outcomes}) =>
     '<tr><th scope="row">'+usd(qPrice)+'</th>'+outcomes.map(({tPrice,total,positiveStates}) =>
-      '<td'+(qPrice === scenario.qPrice && tPrice === scenario.tPrice ? ' style="background:#e5f5ef;font-weight:700"' : '')+
+      '<td'+(qPrice === studyBase.qPrice && tPrice === studyBase.tPrice ? ' style="background:#e5f5ef;font-weight:700"' : '')+
       '>'+usd(total)+'<br><small>'+positiveStates+' of '+results.length+' states save</small></td>'
     ).join('')+'</tr>'
   ).join('');
@@ -471,16 +505,28 @@ function renderFindings(hires) {
   ).join('');
 }
 
-const views = {calculatorView:0,findingsView:1000,hires1500:1500,hires2000:2000};
+const views = {helpView:0,calculatorView:0,findingsView:1000,hires1500:1500,hires2000:2000};
 function showFindings(view) {
   const hires = views[view];
-  element('calculatorPanel').hidden = Boolean(hires);
+  activeView = view;
+  element('calculatorPanel').hidden = view !== 'calculatorView';
+  element('helpPanel').hidden = view !== 'helpView';
   element('findingsPanel').hidden = !hires;
   for (const id of Object.keys(views)) element(id).setAttribute('aria-pressed',String(id === view));
   if (hires) renderFindings(hires);
 }
 
 for (const id of Object.keys(views)) element(id).addEventListener('click',() => showFindings(id));
+function updateStudyPrices() {
+  const valid = element('studyPrices').checkValidity();
+  element('studyPriceError').textContent = valid ? '' : 'Enter two nonnegative prices in dollars and cents. Results show the last valid pair.';
+  if (!valid) return;
+  studyPrices = {qPrice:element('studyQft').valueAsNumber,tPrice:element('studyTst').valueAsNumber};
+  if (views[activeView]) renderFindings(views[activeView]);
+}
+element('studyPrices').addEventListener('input',updateStudyPrices);
+element('studyPrices').addEventListener('reset',() => setTimeout(updateStudyPrices,0));
+element('studyPrices').addEventListener('submit',event => event.preventDefault());
 defaults();
 render();
 </script>
