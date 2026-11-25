@@ -69,37 +69,48 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 .positivity-overview th:nth-child(2),.positivity-overview td:nth-child(2){text-align:left}
 .positivity-details{margin:12px 0 0;padding:10px 12px}
 @media print{.positivity-details:not([open]){display:none}}
-/* QIAGEN-inspired theme based on public corporate materials. */
-:root{--blue:#00386b;--green:#005b9f;--line:#d5e3ef;--brand-red:#cd0039;--ink:#102d47;background:#edf4fa;color:var(--ink)}
-header{background:linear-gradient(110deg,#002b55 8%,#004479 70%,#0064a7);border-bottom:4px solid var(--brand-red);padding:32px max(5vw,20px)}
-header h1{letter-spacing:-.035em}header p{color:#e5f3ff}
+/* Palette and typography from the QIAGEN PowerPoint slide master. */
+:root{font-family:Arial,Helvetica,sans-serif;--blue:#004D9F;--green:var(--blue);--navy:#1B3067;--line:#CEE0F3;--mid-blue:#87A6D5;--brand-red:#E0003C;--paper:#EEF0F4;background:var(--paper);color:var(--navy)}
+header{background:linear-gradient(110deg,var(--navy),var(--blue));border-bottom:4px solid var(--brand-red);padding:32px max(5vw,20px)}
+header h1{letter-spacing:-.035em}header p{color:#FFFFFF}
 .views{column-gap:12px;row-gap:8px}.views button{border-radius:8px}
-.views button[aria-pressed="true"]{box-shadow:0 3px 9px #00386b24}
-main section,main details{border-color:var(--line);box-shadow:0 3px 14px #193e6810}
-main section h2{color:#00386b;letter-spacing:-.015em}
-#findingsPanel>section{border-top:3px solid #1b70b1}
+.views button[aria-pressed="true"]{box-shadow:0 3px 9px #1b306728}
+main section,main details{border-color:var(--line);box-shadow:0 4px 16px #1b306714}
+main section h2,main section h3{color:var(--blue);letter-spacing:-.015em}
+#findingsPanel>section{border-top:3px solid var(--blue)}
 #findingsPanel .table-scroll{border:1px solid var(--line);border-radius:8px}
-#findingsPanel thead th{background:#e5eff8;color:#00386b}
-#findingsPanel thead th[scope="colgroup"]{text-align:center}
-#findingsPanel .break-even-table thead th[scope="colgroup"]:last-child{background:#d3e8fa}
-#findingsPanel .break-even-table thead th[scope="colgroup"]:last-child,
-.break-even-table thead tr:nth-child(2) th:nth-child(4),
-.break-even-table tbody td:nth-child(5){border-left-color:#78a1c3}
-#findingsPanel tbody tr:nth-child(even){background:#f5f9fd}
-#findingsPanel td[style]{background:#dcebf9!important;color:#00386b}
-#findingsPanel .presentation-takeaway{background:#eaf3fb;border-left-color:#0064a7;color:#153a5c}
-.summary-metrics .banner{background:#e5f1fc;border-top:3px solid #0064a7;color:#00386b}
-.summary-metrics .banner.loss{background:#fff2f3;border-top-color:var(--brand-red);color:#8e1835}
+#findingsPanel thead th{background:var(--line);color:var(--navy)}
+#findingsPanel thead th[scope="colgroup"]{text-align:center;background:var(--blue);color:white}
+#findingsPanel thead th[scope="colgroup"]+th[scope="colgroup"]{background:var(--navy);border-left:2px solid var(--mid-blue)}
+#findingsRows td:nth-child(5),.break-even-table thead tr:nth-child(2) th:nth-child(4),
+.break-even-table tbody td:nth-child(5){border-left:2px solid var(--mid-blue)}
+#findingsPanel tbody tr:nth-child(even){background:var(--paper)}
+#findingsPanel .study-base-cell{background:var(--line);color:var(--navy);font-weight:750}
+#findingsPanel .higher-cost{color:var(--brand-red);font-weight:750}
+#findingsPanel .presentation-takeaway{background:var(--line);border-left-color:var(--blue);color:var(--navy)}
+.presentation-caption{color:var(--navy)}
+.study-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+.study-kpi{border:1px solid var(--line);border-top:3px solid var(--blue);border-radius:8px;padding:12px;background:#FFFFFF}
+.study-kpi.prototype{border-top-color:var(--navy)}
+.study-kpi strong,.study-kpi span{display:block}
+.study-kpi strong{font-size:clamp(1rem,2vw,1.5rem);color:var(--navy);font-variant-numeric:tabular-nums;margin-bottom:5px}
+.study-kpi span{font-size:.8rem;line-height:1.35}
+.study-kpi.higher-cost{border-top-color:var(--brand-red)}
+.study-kpi.higher-cost strong{color:var(--brand-red)}
+.summary-metrics .banner{background:var(--line);border-top:3px solid var(--blue);color:var(--navy)}
+.summary-metrics .banner.loss{background:var(--paper);border-top-color:var(--brand-red);color:var(--navy)}
 .result-table-frame{border-color:var(--line)}
-.result-table thead th{background:#00386b}
-.result-table thead th:nth-child(2){background:#005b9f}
-.result-table td:nth-child(2){background:#eaf4ff;color:#00386b;border-left-color:#d5e3ef}
-.result-table tr.group th,.result-table tr.total th,.result-table tr.total td{background:#dcebf9;color:#00386b;border-color:#adc9e2}
-.time-table .site-group{vertical-align:middle;background:#e5eff8;color:#00386b;font-weight:750}
-.time-table tbody tr.site-start:not(:first-child)>*{border-top:2px solid #afc8e0}
+.result-table thead th{background:var(--navy)}
+.result-table thead th:nth-child(2){background:var(--blue)}
+.result-table td:nth-child(2){background:#cee0f34d;color:var(--navy);border-left-color:var(--line)}
+.result-table td:nth-child(3){background:var(--paper)}
+.result-table tr.group th,.result-table tr.total th,.result-table tr.total td{background:var(--line);color:var(--navy);border-color:var(--mid-blue)}
+.time-table .site-group{vertical-align:middle;background:var(--line);color:var(--navy);font-weight:750}
+.time-table tbody tr.site-start:not(:first-child)>*{border-top:2px solid var(--mid-blue)}
 .time-table tbody th[scope="row"]{text-align:left;font-weight:600}
-.time-table tbody td:nth-last-child(2){color:#00386b;font-weight:750;background:#eaf3fb}
-@media print{header{background:white;color:#00386b;border-bottom-width:2px;padding:0 0 10px}header p{color:#153a5c}main section,main details{box-shadow:none}.result-table thead th{color:#00386b}}
+.time-table tbody td:nth-last-child(2){color:var(--navy);font-weight:750;background:#cee0f34d}
+@media screen and (max-width:720px){.study-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{header{background:white;color:var(--navy);border-bottom-width:2px;padding:0 0 10px}header p{color:var(--navy)}main section,main details{box-shadow:none}.result-table thead th{color:var(--navy)}.study-kpis{break-inside:avoid}#findingsPanel thead th[scope="colgroup"]{background:var(--line);color:var(--navy)}}
 </style>
 </head>
 <body>
@@ -194,6 +205,7 @@ main section h2{color:#00386b;letter-spacing:-.015em}
 <button class="secondary" type="reset">Restore study prices</button>
 <p class="note" id="studyPriceError" role="status"></p>
 </form>
+<div id="studyKpis" class="study-kpis" aria-label="Study summary"></div>
 </section>
 <section aria-label="Annual screening costs and savings by site">
 <h3>Annual screening costs and savings by site</h3>
@@ -518,6 +530,13 @@ function renderFindings(hires) {
   ).join('');
   const largest = results.reduce((a,b) => Math.abs(a.change) >= Math.abs(b.change) ? a : b);
   const savesUnderBoth = results.filter(({defaultsRun,excelRun}) => defaultsRun.gain > 0 && excelRun.gain > 0).length;
+  const surveySavings = results.reduce((total,site) => total+site.defaultsRun.gain,0);
+  const prototypeSavings = results.reduce((total,site) => total+site.excelRun.gain,0);
+  const kpi = (value,label,classes='') => '<div class="study-kpi '+classes+'"><strong>'+value+'</strong><span>'+label+'</span></div>';
+  const totalKpi = (total,source,classes='') => kpi(usd(Math.abs(total)),source+' · '+(total < 0 ? 'combined additional annual cost' : 'combined annual savings'),classes+(total<0?' higher-cost':''));
+  element('studyKpis').innerHTML = kpi(fmt(hires),'Annual new hires per site')+
+    kpi(savesUnderBoth+' of '+results.length,'Sites where QFT‑Plus costs less under both assumptions')+
+    totalKpi(surveySavings,'Survey Inputs')+totalKpi(prototypeSavings,'Excel Prototype','prototype');
   element('findingsSummary').textContent = 'QFT‑Plus costs less in '+savesUnderBoth+' of '+results.length+' sites under both positivity assumptions. '+studySite(largest.state)+' shows the largest difference: '+usd(largest.defaultsRun.gain)+' in savings with Survey Inputs versus '+usd(largest.excelRun.gain)+' with the Excel Prototype.';
 
   const priceResults = [27.26,29.43,45,60].map(qPrice => ({
@@ -532,7 +551,7 @@ function renderFindings(hires) {
   }));
   element('priceRows').innerHTML = priceResults.map(({qPrice,outcomes}) =>
     '<tr><th scope="row">'+usd(qPrice)+'</th>'+outcomes.map(({tPrice,total,positiveStates}) =>
-      '<td'+(qPrice === studyBase.qPrice && tPrice === studyBase.tPrice ? ' style="background:#e5f5ef;font-weight:700"' : '')+
+      '<td class="'+(qPrice === studyBase.qPrice && tPrice === studyBase.tPrice ? 'study-base-cell' : total < 0 ? 'higher-cost' : '')+'"'+
       '>'+usd(total)+'<br><small>'+positiveStates+' of '+results.length+' sites save</small></td>'
     ).join('')+'</tr>'
   ).join('');
