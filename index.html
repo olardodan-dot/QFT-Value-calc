@@ -115,7 +115,7 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <label>TST reimbursement ($)<input id="tRate" aria-describedby="reimbursementEligibility" type="number" min="0" step="0.01" value="10.82" required></label>
 <label>X-ray cost ($)<input id="xPrice" type="number" min="0" step="0.01" value="200" required></label>
 </div>
-<label>Positive-result rates<select id="positiveRateSource"><option value="state">State Defaults (Survey Input)</option><option value="excel">Excel formulas</option></select></label>
+<label>Positive-result rates<select id="positiveRateSource"><option value="state">Survey Inputs</option><option value="excel">Excel Prototype</option></select></label>
 <label class="check"><input type="checkbox" id="xray" checked>Include in-house X-rays</label>
 <details class="excel-validation"><summary>Advanced · Excel validation</summary>
 <label class="check"><input type="checkbox" id="legacyXray">Use Excel X-ray handling</label>
@@ -133,7 +133,7 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <p class="note">This draft uses the six state profiles and the labor lookup values saved in the source workbook. Screening outcomes are modeled estimates. TB treatment costs are excluded. Confirm pricing, reimbursement and labor assumptions before sharing an estimate.</p>
 <p class="note">By default, the X-ray setting applies to both cost and profit calculations. QFT reimbursement is based on the applicable patient claim type, with cash collected separately. Excel rules mode restores the workbook’s X-ray behavior and its single-rate reimbursement formula for comparison.</p>
 <p class="note">Contract uses the price you enter. Non-contract uses the Average QFT Pricing column in ContractPricingTable, based on annual QFT test volume. Public Health and Government start at the selected year’s table price and allow a scenario override.</p>
-<p class="note">State defaults apply when you select a state. State defaults apply specified positive-result rates to the number of people screened and use the Excel formulas where a rate is unspecified. Excel formulas mode uses modeled positive results for both tests. Rhode Island uses its saved population inputs with the same formulas. Rhode Island timing uses the supplied visit and follow-up values.</p>
+<p class="note">Selecting a state loads its default X-ray cost and TST non-return rate. Survey Inputs applies the supplied positive-result rates to the number of people screened and uses the Excel Prototype estimate where a rate is missing. Excel Prototype uses the original workbook’s estimates for both tests. Rhode Island uses its saved population inputs with the same formulas. Rhode Island timing uses the supplied visit and follow-up values.</p>
 <p class="note">Source workbook: QFT-TST-Value Calculator-Multi-Center.xlsm. This version covers the workbook’s Clinic and Hospital TST workflows. Excel parity with populated scenarios is pending.</p>
 </details>
 </article>
@@ -146,11 +146,11 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <h3>What does the study assume?</h3>
 <p>Each scenario models a hospital with in-house QFT processing and blood draw, two-step TST, and new hires only. Study base prices are <strong>$29.43 per QFT test</strong> and <strong>$12.50 per TST</strong>. The study uses state-specific X-ray costs and TST non-return rates.</p>
 <h3>Why did savings change when I switched positivity settings?</h3>
-<p><strong>State Defaults (Survey Input)</strong> uses a survey rate where supplied and the Excel formula elsewhere. For Rhode Island at 1,000 hires, the survey TST rate yields 50 estimated positives versus 71 with Excel. Fewer follow-ups lower TST costs, so QFT savings are smaller. At base prices QFT still costs less under both settings.</p>
+<p><strong>Survey Inputs</strong> uses a survey rate where supplied and the Excel Prototype estimate elsewhere. For Rhode Island at 1,000 hires, the survey TST rate yields 50 estimated positives versus 71 with the Excel Prototype. Fewer follow-ups lower TST costs, so QFT savings are smaller. At base prices QFT still costs less under both settings.</p>
 <h3>When does reimbursement count?</h3>
 <p>Only the <strong>Patients</strong> group generates modeled reimbursement. New hires and current employees generate $0 even when a reimbursement rate is visible. Eligible QFT claims depend on the processing and blood-draw settings. The Advanced Excel validation switches reproduce legacy workbook behavior. Leave them unchecked for normal use.</p>
 <h3>How do I reproduce a checked result?</h3>
-<p>In Calculator, select <strong>Oregon → Hospital → Send out → In-house blood draw</strong>. Enter <strong>1,000 patients</strong> and <strong>1,000 new hires</strong>, leave current employees at zero, and keep two-step TST enabled. Use Contract pricing with <strong>$30 QFT</strong> and <strong>$15 TST</strong>. Select Excel formulas for positive-result rates, keep in-house X-rays enabled, and leave both Advanced switches unchecked. Use <strong>$5.00 QFT draw reimbursement</strong> and <strong>$10.82 TST reimbursement</strong>.</p>
+<p>In Calculator, select <strong>Oregon → Hospital → Send out → In-house blood draw</strong>. Enter <strong>1,000 patients</strong> and <strong>1,000 new hires</strong>, leave current employees at zero, and keep two-step TST enabled. Use Contract pricing with <strong>$30 QFT</strong> and <strong>$15 TST</strong>. Select Excel Prototype for positive-result rates, keep in-house X-rays enabled, and leave both Advanced switches unchecked. Use <strong>$5.00 QFT draw reimbursement</strong> and <strong>$10.82 TST reimbursement</strong>.</p>
 <p>Under <strong>Patient reimbursement</strong>, expect <strong>$5,045 for QFT</strong> and <strong>$10,820 for TST</strong>. Set Patients to zero and both become $0.</p>
 </section></main>
 <main id="findingsPanel" class="findings" hidden>
@@ -167,9 +167,9 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <section aria-label="Annual screening costs and savings by site">
 <h3>Annual screening costs and savings by site</h3>
 <p class="presentation-caption" id="findingsCaption"></p>
-<p class="note presentation-note">Savings = TST cost minus QFT‑Plus cost. The last column compares Survey Input with Excel formulas.</p>
+<p class="note presentation-note">Savings = TST cost minus QFT‑Plus cost. The last column compares Survey Inputs with the Excel Prototype.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Annual costs and savings by site"><table>
-<thead><tr><th rowspan="2" scope="col">Site</th><th colspan="3" scope="colgroup">State Defaults (Survey Input)</th><th colspan="3" scope="colgroup">Excel positive-rate formulas</th><th rowspan="2" scope="col">Survey savings vs. Excel</th></tr>
+<thead><tr><th rowspan="2" scope="col">Site</th><th colspan="3" scope="colgroup">Survey Inputs</th><th colspan="3" scope="colgroup">Excel Prototype</th><th rowspan="2" scope="col">Survey savings vs. Excel Prototype</th></tr>
 <tr><th scope="col">QFT cost</th><th scope="col">TST cost</th><th scope="col">Savings</th><th scope="col">QFT cost</th><th scope="col">TST cost</th><th scope="col">Savings</th></tr></thead>
 <tbody id="findingsRows"></tbody></table></div>
 <p class="presentation-takeaway"><strong>Takeaway</strong> <span id="findingsSummary"></span></p>
@@ -180,19 +180,19 @@ main.findings{display:block}.table-scroll{overflow-x:auto}.table-scroll table{mi
 <p class="presentation-caption" id="breakEvenCaption"></p>
 <p class="note presentation-note">At the listed price, annual costs are equal. Bold values are below the selected QFT‑Plus price.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Break-even QFT prices">
-<table class="break-even-table"><thead><tr><th rowspan="2">Site</th><th colspan="3" scope="colgroup">State Defaults (Survey Input)</th><th colspan="3" scope="colgroup">Excel formulas</th></tr><tr><th>TST $10</th><th>TST $12.50</th><th>TST $15</th><th>TST $10</th><th>TST $12.50</th><th>TST $15</th></tr></thead><tbody id="breakEvenRows"></tbody></table>
+<table class="break-even-table"><thead><tr><th rowspan="2">Site</th><th colspan="3" scope="colgroup">Survey Inputs</th><th colspan="3" scope="colgroup">Excel Prototype</th></tr><tr><th>TST $10</th><th>TST $12.50</th><th>TST $15</th><th>TST $10</th><th>TST $12.50</th><th>TST $15</th></tr></thead><tbody id="breakEvenRows"></tbody></table>
 </div><p class="presentation-takeaway"><strong>Takeaway</strong> <span id="breakEvenSummary"></span></p>
 </section>
 <section aria-labelledby="positivityTitle">
 <h2 id="positivityTitle">How survey positivity rates change QFT‑Plus savings</h2>
 <p class="presentation-caption" id="positivityCaption"></p>
-<p class="note presentation-note">Changes compare Survey Input with the Excel formulas at the prices shown.</p>
+<p class="note presentation-note">Changes compare Survey Inputs with the Excel Prototype at the prices shown.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Impact of survey positivity rates">
-<table class="positivity-overview"><thead><tr><th scope="col">Site</th><th scope="col">What changed with Survey Input?</th><th scope="col">Staff hours saved</th><th scope="col">Annual savings</th><th scope="col">Did QFT‑Plus still cost less?</th></tr></thead><tbody id="positivityOverviewRows"></tbody></table>
+<table class="positivity-overview"><thead><tr><th scope="col">Site</th><th scope="col">What changed with Survey Inputs?</th><th scope="col">Staff hours saved</th><th scope="col">Annual savings</th><th scope="col">Did QFT‑Plus still cost less?</th></tr></thead><tbody id="positivityOverviewRows"></tbody></table>
 </div>
 <p class="presentation-takeaway"><strong>Takeaway</strong> <span id="positivitySummary"></span></p>
 <details class="positivity-details"><summary>View calculation details</summary>
-<p class="note">Each pair shows Survey Input / Excel formulas. Positive dollar amounts indicate savings with QFT‑Plus.</p>
+<p class="note">Each pair shows Survey Inputs / Excel Prototype. Positive dollar amounts indicate savings with QFT‑Plus.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="Detailed positivity comparison"><table><thead><tr><th>Site</th><th>QFT positives</th><th>TST positives</th><th>Hours saved</th><th>Product savings</th><th>Labor savings</th><th>X-ray savings</th><th>QFT saves at selected prices</th></tr></thead><tbody id="positivityRows"></tbody></table></div>
 </details>
 </section>
@@ -348,7 +348,7 @@ function render() {
   element('cash').disabled = element('fee').disabled = !clinic;
   element('qPrice').disabled = !manual;
   if (!clinic) input.fee = 0;
-  element('context').textContent = [input.state,input.facility,input.process,input.draw,input.positiveRateSource === 'excel' ? 'Excel positive-rate formulas' : 'State Defaults (Survey Input)'].join(' · ');
+  element('context').textContent = [input.state,input.facility,input.process,input.draw,input.positiveRateSource === 'excel' ? 'Excel Prototype' : 'Survey Inputs'].join(' · ');
   const valid = form.checkValidity();
   const data = valid ? calculate(input) : null;
   element('appliedPriceField').hidden = !volumeTier;
@@ -390,7 +390,7 @@ function render() {
   const profile = profiles[input.state];
   const positiveNote = (name,rate) => input.positiveRateSource !== 'excel' && rate != null
     ? name+': '+fmt(rate*100)+'% of people screened.'
-    : name+': estimated using the Excel formulas.';
+    : name+': estimated using the Excel Prototype.';
   const priceSource = {contract:'Entered contract price',noncontract:'Annual QFT volume tier',public:'Public Health table for '+input.year,government:'Government table for '+input.year};
   const incomeNote = q.income || t.income
     ? 'The headline also reflects modeled reimbursement and cash income.'
@@ -465,7 +465,7 @@ function renderFindings(hires) {
   const selected = context+' · '+usd(studyPrices.qPrice)+' per QFT‑Plus test / '+usd(studyPrices.tPrice)+' per TST';
   for (const id of ['findings','positivity','time']) element(id+'Caption').textContent = selected;
   element('breakEvenCaption').textContent = context+' · TST prices '+[10,12.50,15].map(usd).join(', ')+' · QFT‑Plus comparison price '+usd(studyPrices.qPrice);
-  element('priceCaption').textContent = context+' · Survey Input · Original study price range';
+  element('priceCaption').textContent = context+' · Survey Inputs · Original study price range';
   element('findingsVolume').textContent = fmt(hires)+' new hires per hospital per year';
   const scenario = {
     facility:'Hospital', process:'In-house', draw:'In-house',
@@ -487,7 +487,7 @@ function renderFindings(hires) {
   ).join('');
   const largest = results.reduce((a,b) => Math.abs(a.change) >= Math.abs(b.change) ? a : b);
   const savesUnderBoth = results.filter(({defaultsRun,excelRun}) => defaultsRun.gain > 0 && excelRun.gain > 0).length;
-  element('findingsSummary').textContent = 'QFT‑Plus costs less in '+savesUnderBoth+' of '+results.length+' sites under both positivity assumptions. '+studySite(largest.state)+' shows the largest difference: '+usd(largest.defaultsRun.gain)+' in savings with Survey Input versus '+usd(largest.excelRun.gain)+' with Excel formulas.';
+  element('findingsSummary').textContent = 'QFT‑Plus costs less in '+savesUnderBoth+' of '+results.length+' sites under both positivity assumptions. '+studySite(largest.state)+' shows the largest difference: '+usd(largest.defaultsRun.gain)+' in savings with Survey Inputs versus '+usd(largest.excelRun.gain)+' with the Excel Prototype.';
 
   const priceResults = [27.26,29.43,45,60].map(qPrice => ({
     qPrice,
@@ -538,8 +538,8 @@ function renderFindings(hires) {
       : fmt(Math.abs(hourChange))+(hourChange < 0 ? ' fewer hours saved' : ' more hours saved');
     const savings = Math.abs(change) < 0.005 ? 'No change' : usd(Math.abs(change))+(change < 0 ? ' less saved' : ' more saved');
     const verdict = defaultsRun.gain > 0
-      ? (excelRun.gain > 0 ? 'Yes, under both' : 'Survey Input only')
-      : (excelRun.gain > 0 ? 'Excel formulas only' : 'Neither assumption');
+      ? (excelRun.gain > 0 ? 'Yes, under both' : 'Survey Inputs only')
+      : (excelRun.gain > 0 ? 'Excel Prototype only' : 'Neither assumption');
     const values = [positives.join(' · ') || 'Same positive counts',hours,savings,verdict];
     return '<tr><th scope="row">'+studySite(state)+'</th>'+values.map(value=>'<td>'+value+'</td>').join('')+'</tr>';
   }).join('');
@@ -553,14 +553,14 @@ function renderFindings(hires) {
   const outcome = defaultsRun.gain > 0 ? usd(defaultsRun.gain)+' in estimated annual QFT‑Plus savings'
     : defaultsRun.gain < 0 ? usd(-defaultsRun.gain)+' in estimated additional annual costs with QFT‑Plus' : 'equal estimated annual costs';
   element('positivitySummary').textContent = costChanges.length
-    ? studySite(largest.state)+' has the largest change in savings. With Survey Input, '+costChanges.join(' and ')+', resulting in '+outcome+'.'
+    ? studySite(largest.state)+' has the largest change in savings. With Survey Inputs, '+costChanges.join(' and ')+', resulting in '+outcome+'.'
     : 'Estimated annual savings are the same under both positivity assumptions.';
   element('positivityRows').innerHTML = results.map(({state,defaultsRun,excelRun}) => {
     const runs = [defaultsRun,excelRun];
     const pair = (value,format) => runs.map(run => format(value(run))).join(' / ');
     const saves = runs.map(run => run.gain > 0);
     const verdict = saves[0] === saves[1] ? (saves[0] ? 'Both settings' : 'Neither setting')
-      : (saves[0] ? 'State defaults only' : 'Excel formulas only');
+      : (saves[0] ? 'Survey Inputs only' : 'Excel Prototype only');
     const values = [pair(run=>run.qPositive,fmt),pair(run=>run.tPositive,fmt),pair(hoursSaved,fmt),
       ...['product','labor','xray'].map(key=>pair(run=>run.t[key]-run.q[key],usd)),verdict];
     return '<tr><th scope="row">'+studySite(state)+'</th>'+values.map(value=>'<td>'+value+'</td>').join('')+'</tr>';
@@ -569,7 +569,7 @@ function renderFindings(hires) {
   const adverseSaves = results.filter(({defaultsRun,excelRun}) => [defaultsRun,excelRun].every(run => hoursSaved(run,1.2,0.8) > 0)).length;
   element('timeSummary').textContent = 'Even in the adverse workflow, QFT‑Plus saves staff time in '+adverseSaves+' of '+results.length+' sites under both positivity assumptions.';
   element('timeRows').innerHTML = results.flatMap(({state,defaultsRun,excelRun}) =>
-    [[defaultsRun,'State defaults'],[excelRun,'Excel formulas']].map(([run,label]) => {
+    [[defaultsRun,'Survey Inputs'],[excelRun,'Excel Prototype']].map(([run,label]) => {
       const values = [run.qHours,run.tHours,hoursSaved(run,1.2,0.8),hoursSaved(run),hoursSaved(run,0.8,1.2)];
       return '<tr><th scope="row">'+studySite(state)+'</th><td>'+label+'</td>'+
         values.map(value=>'<td>'+fmt(value)+'</td>').join('')+'</tr>';
